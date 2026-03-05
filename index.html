@@ -1424,45 +1424,26 @@ async function autoDisconnect() {
 // ═══════════════════════════════════════════════════════════
 //  APPS SCRIPT FETCH
 // ═══════════════════════════════════════════════════════════
-// ── JSONP helper ──
+// ── fetch helper (CORS-safe via redirect:follow) ──
 let _cbIdx = 0;
-function apsFetch(action, body) {
-    return new Promise((resolve, reject) => {
-        const cbName = '_cb' + (_cbIdx++);
-        const params = new URLSearchParams({ action, cb: cbName });
-
-        // For save, serialize data into the URL param
-        if (body) {
-            Object.entries(body).forEach(([k, v]) => {
-                if (k === 'data') {
-                    params.set('data', encodeURIComponent(JSON.stringify(v)));
-                } else if (v !== undefined && v !== null) {
-                    params.set(k, String(v));
-                }
-            });
-        }
-
-        const script = document.createElement('script');
-        const timer  = setTimeout(() => {
-            cleanup();
-            reject(new Error('timeout'));
-        }, 15000);
-
-        function cleanup() {
-            clearTimeout(timer);
-            delete window[cbName];
-            if (script.parentNode) script.parentNode.removeChild(script);
-        }
-
-        window[cbName] = (result) => {
-            cleanup();
-            resolve(result);
-        };
-
-        script.src = SCRIPT_URL + '?' + params.toString();
-        script.onerror = () => { cleanup(); reject(new Error('script load failed')); };
-        document.head.appendChild(script);
+async function apsFetch(action, body) {
+    const params = new URLSearchParams({ action });
+    if (body) {
+        Object.entries(body).forEach(([k, v]) => {
+            if (k === 'data') {
+                params.set('data', encodeURIComponent(JSON.stringify(v)));
+            } else if (v !== undefined && v !== null) {
+                params.set(k, String(v));
+            }
+        });
+    }
+    const url = SCRIPT_URL + '?' + params.toString();
+    const res = await fetch(url, {
+        redirect: 'follow',
+        mode: 'cors',
     });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
 }
 
 async function loadDataFromServer(serverData) {
