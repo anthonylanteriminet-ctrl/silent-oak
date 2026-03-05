@@ -1,0 +1,3325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>Silent Oak - Hub de Gestion</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --border: rgba(255,255,255,0.1);
+            --shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139,92,246,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(99,102,241,0.1) 0%, transparent 50%);
+            filter: blur(60px);
+            animation: bgPulse 10s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50%       { opacity: 0.8; transform: scale(1.1); }
+        }
+
+        .container { display: flex; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 2rem 1.5rem;
+            display: flex; flex-direction: column;
+            position: fixed; height: 100vh;
+            overflow-y: scroll; overflow-x: hidden;
+            z-index: 100; transition: transform 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99,102,241,0.3) transparent;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(99,102,241,0.3);
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.7); }
+
+        /* ── Main content scroll ── */
+        .main-content {
+            overflow-y: auto; overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99,102,241,0.2) transparent;
+        }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-track { background: transparent; }
+        .main-content::-webkit-scrollbar-thumb {
+            background: rgba(99,102,241,0.2);
+            border-radius: 10px;
+        }
+        .main-content::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,0.5); }
+
+        .logo {
+            display: flex; align-items: center; gap: 1rem;
+            margin-bottom: 3rem; padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-icon {
+            width: 50px; height: 50px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(99,102,241,0.5);
+        }
+
+        .logo-text h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem; font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .logo-text span { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 2px; }
+
+        .nav-menu { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+
+        .nav-link {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 1rem 1.25rem; color: var(--text-secondary);
+            text-decoration: none; border-radius: 12px;
+            transition: all 0.3s ease; cursor: pointer;
+            border: none; background: transparent; width: 100%;
+            font-size: 0.95rem; font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active { background: var(--bg-tertiary); color: var(--text-primary); transform: translateX(5px); }
+        .nav-link.active { background: var(--accent-gradient); color: white; box-shadow: 0 10px 30px -10px rgba(99,102,241,0.5); }
+        .nav-link i { width: 24px; text-align: center; font-size: 1.1rem; }
+
+        .nav-badge {
+            margin-left: auto; background: var(--danger); color: white;
+            font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 600;
+        }
+
+        .sidebar-footer { margin-top: auto; padding-top: 2rem; border-top: 1px solid var(--border); }
+
+        .save-status { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; }
+        .save-status.saved { color: var(--success); }
+
+        .btn-save {
+            width: 100%; padding: 0.875rem; margin-bottom: 0.5rem;
+            background: var(--accent-gradient); border: none;
+            color: white; border-radius: 8px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            box-shadow: 0 10px 30px -10px rgba(99,102,241,0.5);
+        }
+        .btn-save:hover { transform: translateY(-2px); }
+
+        .btn-import {
+            width: 100%; padding: 0.75rem;
+            background: var(--bg-tertiary); border: 1px solid var(--border);
+            color: var(--text-secondary); border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; transition: all 0.3s ease;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .btn-import:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+
+        /* ── Main ── */
+        .main-content { flex: 1; margin-left: 280px; padding: 2rem; max-width: calc(100% - 280px); }
+
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
+        }
+
+        .header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 700; }
+        .header-actions { display: flex; gap: 1rem; }
+
+        .btn-primary {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent-gradient); color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 0.9rem; font-weight: 600; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 0.5rem;
+            box-shadow: 0 10px 30px -10px rgba(99,102,241,0.5);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -10px rgba(99,102,241,0.6); }
+
+        .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary); color: var(--text-primary);
+            border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+            font-size: 0.9rem; transition: all 0.3s ease;
+        }
+        .btn-secondary:hover { background: var(--bg-secondary); border-color: var(--accent-primary); }
+
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+
+        .card {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: var(--accent-gradient); transform: scaleX(0); transition: transform 0.3s ease;
+        }
+
+        .card:hover { transform: translateY(-5px); border-color: var(--accent-primary); box-shadow: var(--shadow); }
+        .card:hover::before { transform: scaleX(1); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+
+        .card-icon {
+            width: 48px; height: 48px; background: var(--bg-tertiary);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.25rem; color: var(--accent-primary);
+        }
+
+        .card-actions { display: flex; gap: 0.5rem; }
+
+        .btn-icon {
+            width: 32px; height: 32px; border-radius: 8px; border: none;
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-icon:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+        .btn-icon.danger:hover { color: var(--danger); }
+        .btn-icon.edit:hover  { color: var(--accent-primary); }
+
+        .card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary); }
+        .card p  { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; }
+
+        .card-meta { display: flex; gap: 1rem; margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); flex-wrap: wrap; }
+        .card-meta span { display: flex; align-items: center; gap: 0.25rem; }
+
+        .tag {
+            display: inline-block; padding: 0.25rem 0.75rem;
+            background: var(--bg-tertiary); border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600; margin-top: 0.75rem; border: 1px solid var(--border);
+        }
+
+        .tag.urgent  { background: rgba(239,68,68,0.2);   color: var(--danger);  border-color: var(--danger); }
+        .tag.progress{ background: rgba(245,158,11,0.2);  color: var(--warning); border-color: var(--warning); }
+        .tag.done    { background: rgba(16,185,129,0.2);  color: var(--success); border-color: var(--success); }
+        .tag.studio  { background: rgba(59,130,246,0.2);  color: var(--info);    border-color: var(--info); }
+
+        /* ── Forms ── */
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%; padding: 0.875rem 1rem;
+            background: var(--bg-tertiary); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-primary);
+            font-size: 0.95rem; transition: all 0.3s ease; font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none; border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+
+        .modal {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 20px; width: 90%; max-width: 600px; max-height: 90vh;
+            overflow-y: auto; transform: scale(0.9); transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-family: 'Space Grotesk', sans-serif; font-size: 1.25rem; }
+
+        .modal-close {
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            background: var(--bg-tertiary); color: var(--text-secondary); cursor: pointer;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: var(--danger); color: white; transform: rotate(90deg); }
+
+        .modal-body   { padding: 1.5rem; }
+        .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 1rem; }
+
+        /* ── Stats ── */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+
+        .stat-card {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.5rem; position: relative; overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: ''; position: absolute; top: -50%; right: -50%;
+            width: 200px; height: 200px; background: var(--accent-gradient);
+            opacity: 0.1; border-radius: 50%; filter: blur(40px);
+        }
+
+        .stat-label { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; }
+
+        .stat-value {
+            font-size: 2.5rem; font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+
+        .stat-change { font-size: 0.85rem; color: var(--success); margin-top: 0.5rem; }
+
+        /* ── Calendar ── */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-top: 1rem; }
+
+        .calendar-day {
+            aspect-ratio: 1; background: var(--bg-tertiary); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease;
+            border: 1px solid transparent; position: relative;
+        }
+
+        .calendar-day:hover { background: var(--accent-primary); transform: scale(1.1); z-index: 10; }
+        .calendar-day.has-event::after { content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px; background: var(--accent-secondary); border-radius: 50%; }
+        .calendar-day.today { border-color: var(--accent-primary); font-weight: 700; }
+
+        /* ── Contact categories ── */
+        .contact-categories { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+
+        .category-btn {
+            padding: 0.5rem 1rem; background: var(--bg-tertiary);
+            border: 1px solid var(--border); color: var(--text-secondary);
+            border-radius: 20px; cursor: pointer; transition: all 0.3s ease; font-size: 0.9rem;
+        }
+        .category-btn:hover, .category-btn.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+
+        /* ── Empty state ── */
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-secondary); }
+        .empty-state i  { font-size: 4rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-state h3 { font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--text-primary); }
+
+        /* ── Mobile ── */
+        .menu-toggle {
+            display: none; position: fixed; top: 1rem; left: 1rem; z-index: 101;
+            width: 48px; height: 48px; background: var(--bg-secondary);
+            border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary);
+            cursor: pointer; align-items: center; justify-content: center; font-size: 1.25rem;
+        }
+
+        /* tablet 769-1024 handled in mobile block above */
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem;
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-left: 4px solid var(--success);
+            padding: 1rem 1.5rem; border-radius: 8px; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 0.75rem;
+            transform: translateX(400px); transition: transform 0.3s ease; z-index: 2000;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-left-color: var(--danger); }
+
+        /* ── Priority ── */
+        .priority { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 4px; }
+        .priority.high   { background: rgba(239,68,68,0.2);  color: var(--danger); }
+        .priority.medium { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .priority.low    { background: rgba(16,185,129,0.2); color: var(--success); }
+
+        /* ── Quick actions ── */
+        .quick-actions { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+
+        .quick-action-btn {
+            padding: 1rem 1.5rem; background: var(--bg-secondary);
+            border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary);
+            cursor: pointer; transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem;
+        }
+        .quick-action-btn:hover { background: var(--accent-primary); border-color: var(--accent-primary); transform: translateY(-2px); }
+
+        /* ── Progress ── */
+        .progress-bar { width: 100%; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; margin-top: 0.5rem; }
+        .progress-fill { height: 100%; background: var(--accent-gradient); border-radius: 3px; transition: width 0.5s ease; }
+
+        /* ── Links ── */
+        .link-card {
+            display: flex; align-items: center; gap: 1rem; padding: 1rem;
+            background: var(--bg-tertiary); border-radius: 12px; margin-bottom: 0.75rem;
+            transition: all 0.3s ease; text-decoration: none; color: inherit;
+            border: 1px solid transparent;
+        }
+        .link-card:hover { border-color: var(--accent-primary); transform: translateX(5px); }
+
+        .link-icon { width: 40px; height: 40px; background: var(--bg-secondary); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent-primary); }
+        .link-info h4 { font-size: 0.95rem; margin-bottom: 0.25rem; }
+        .link-info p  { font-size: 0.8rem; color: var(--text-secondary); }
+        .link-arrow { margin-left: auto; color: var(--text-secondary); }
+
+        
+    
+        /* ── First-run folder picker ── */
+
+        .folder-card {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 20px; padding: 3rem; max-width: 500px; width: 100%;
+            text-align: center; box-shadow: var(--shadow);
+        }
+
+        .folder-card .logo-icon {
+            width: 72px; height: 72px; margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+
+        .folder-card h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.75rem; margin-bottom: 0.75rem;
+        }
+
+        .folder-card p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 2rem; }
+
+        .folder-card .btn-primary { width: 100%; justify-content: center; font-size: 1rem; padding: 1rem; margin-bottom: 0.75rem; }
+        .folder-card .btn-secondary { width: 100%; justify-content: center; }
+
+
+
+        /* ══════════════════════════════════════
+           MOBILE / RESPONSIVE — full overhaul
+           ══════════════════════════════════════ */
+
+        /* ── Bottom tab bar (mobile only) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            z-index: 200;
+            padding: 0 0 env(safe-area-inset-bottom, 0);
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .bottom-nav::-webkit-scrollbar { display: none; }
+
+        .bottom-nav-inner {
+            display: flex;
+            min-width: max-content;
+            padding: 0 0.5rem;
+        }
+
+        .bottom-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            padding: 0.6rem 0.9rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+        .bottom-nav-btn i { font-size: 1.2rem; }
+        .bottom-nav-btn.active { color: var(--accent-primary); }
+        .bottom-nav-btn.active::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 32px; height: 2px;
+            background: var(--accent-gradient);
+            border-radius: 0 0 4px 4px;
+        }
+        .bottom-nav-badge {
+            position: absolute;
+            top: 0.4rem; right: 0.5rem;
+            background: var(--danger);
+            color: white;
+            font-size: 0.55rem;
+            padding: 0.1rem 0.35rem;
+            border-radius: 20px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        /* ── Mobile save button (floating) ── */
+        .mobile-save-fab {
+            display: none;
+            position: fixed;
+            bottom: calc(4.5rem + env(safe-area-inset-bottom, 0));
+            right: 1.25rem;
+            width: 52px; height: 52px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            z-index: 199;
+            box-shadow: 0 8px 24px rgba(99,102,241,0.5);
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+        .mobile-save-fab:active { transform: scale(0.92); }
+
+        /* ── Overlay behind open sidebar ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 99;
+            backdrop-filter: blur(4px);
+        }
+        .sidebar-overlay.visible { display: block; }
+
+        @media (max-width: 768px) {
+            /* Hide desktop sidebar toggle, show bottom nav */
+            .menu-toggle { display: none !important; }
+            .bottom-nav { display: flex; }
+            .mobile-save-fab { display: flex; }
+
+            /* Sidebar becomes a drawer from left */
+            .sidebar {
+                transform: translateX(-100%);
+                width: 85vw;
+                max-width: 320px;
+                z-index: 300;
+                padding: 1.5rem 1.25rem;
+                padding-top: calc(1.5rem + env(safe-area-inset-top, 0));
+            }
+            .sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,0.8); }
+
+            /* Main content full width, padded for bottom nav */
+            .main-content {
+                margin-left: 0 !important;
+                max-width: 100% !important;
+                padding: 1.25rem 1rem;
+                padding-top: calc(1rem + env(safe-area-inset-top, 0));
+                padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0));
+            }
+
+            /* Header */
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+                margin-bottom: 1.25rem;
+                padding-bottom: 1rem;
+            }
+            .header h2 { font-size: 1.5rem; }
+            .header-actions { width: 100%; }
+            .header-actions .btn-primary { width: 100%; justify-content: center; }
+
+            /* Cards: 1 column */
+            .cards-grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem;
+            }
+
+            /* Stats: 2 columns */
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+            .stat-card { padding: 1rem; }
+            .stat-value { font-size: 1.8rem; }
+
+            /* Forms */
+            .form-row { grid-template-columns: 1fr !important; }
+            .modal { width: 95%; border-radius: 16px; max-height: 95vh; }
+            .modal-body { padding: 1rem; }
+            .modal-footer { padding: 0.875rem 1rem; }
+
+            /* Contact categories: scrollable row */
+            .contact-categories {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                scrollbar-width: none;
+                padding-bottom: 0.25rem;
+                -webkit-overflow-scrolling: touch;
+            }
+            .contact-categories::-webkit-scrollbar { display: none; }
+            .category-btn { white-space: nowrap; flex-shrink: 0; }
+
+            /* Checklist two-panel: stack on mobile */
+            #checklist > div > div:first-child,
+            #checklist > div > div:last-child { /* handled by grid */ }
+            /* Quick actions: 2×2 grid */
+            .quick-actions {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+            /* Checklist two-panel: stack on mobile */
+            #checklist [style*="280px"] { grid-template-columns: 1fr !important; }
+            .quick-action-btn {
+                flex-direction: column;
+                text-align: center;
+                padding: 0.875rem 0.5rem;
+                gap: 0.4rem;
+                font-size: 0.8rem;
+            }
+
+            /* Calendar: tighter */
+            .calendar-day { font-size: 0.75rem; }
+
+            /* Toast: full width bottom */
+            .toast {
+                bottom: calc(5rem + env(safe-area-inset-bottom, 0));
+                right: 1rem; left: 1rem;
+                max-width: 100%;
+                transform: translateY(120px);
+            }
+            .toast.show { transform: translateY(0); }
+
+            /* Logo in sidebar: compact */
+            .logo { margin-bottom: 1.5rem; padding-bottom: 1.25rem; }
+
+            /* Folder picker screens */
+        }
+
+        @media (max-width: 400px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .quick-actions { grid-template-columns: 1fr; }
+            .header h2 { font-size: 1.3rem; }
+        }
+
+        /* Tablet tweaks */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 300;
+            }
+            .sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,0.8); }
+            .main-content {
+                margin-left: 0 !important;
+                max-width: 100% !important;
+                padding-top: 5rem;
+            }
+            .menu-toggle { display: flex !important; }
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        }
+
+        /* Touch-friendly tap targets */
+        @media (hover: none) {
+            .btn-icon { width: 40px; height: 40px; }
+            .nav-link { padding: 0.875rem 1rem; }
+            .card { cursor: default; }
+        }
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebarMobile()"></div>
+
+    
+    <!-- ── Folder picker (first run) ── -->
+    <!-- ── Session screen (Apps Script mode) ── -->
+    <div id="session-screen" style="position:fixed;inset:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;z-index:9999;padding:2rem;">
+        <div style="background:#12121a;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:3rem;max-width:480px;width:100%;text-align:center;">
+            <div style="width:72px;height:72px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:2rem;">
+                <i class="fas fa-tree" style="color:white;"></i>
+            </div>
+            <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.75rem;margin-bottom:0.5rem;color:#f8fafc;">Silent Oak</h2>
+            <p style="color:#94a3b8;font-size:0.85rem;margin-bottom:2rem;">Hub de gestion du groupe</p>
+
+            <!-- State: enter name -->
+            <div id="ss-enter" style="">
+                <p style="color:#94a3b8;margin-bottom:1.25rem;font-size:0.95rem;">Entrez votre prénom pour commencer</p>
+                <input id="ss-name" type="text" placeholder="Votre prénom…" maxlength="30"
+                    onkeydown="if(event.key==='Enter')ssConnect()"
+                    style="width:100%;padding:0.9rem 1rem;background:#1a1a25;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#f8fafc;font-size:1rem;font-family:inherit;margin-bottom:1rem;text-align:center;">
+                <button onclick="ssConnect()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;">
+                    <i class="fas fa-play"></i> Entrer
+                </button>
+            </div>
+
+            <!-- State: occupied -->
+            <div id="ss-occupied" style="display:none;">
+                <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:1.25rem;margin-bottom:1.5rem;">
+                    <div style="font-size:1.5rem;margin-bottom:0.5rem;">🔒</div>
+                    <div style="font-weight:600;color:#f8fafc;margin-bottom:0.4rem;">Session en cours</div>
+                    <div id="ss-occupied-msg" style="color:#94a3b8;font-size:0.9rem;"></div>
+                </div>
+                <button onclick="ssCheckAgain()" style="width:100%;padding:0.85rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:0.5rem;">
+                    <i class="fas fa-sync"></i> Réessayer
+                </button>
+                <button onclick="ssForceEnter()" style="width:100%;padding:0.75rem;background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:inherit;">
+                    Prendre la session de force
+                </button>
+            </div>
+
+            <!-- State: loading -->
+            <div id="ss-loading" style="display:none;">
+                <div style="color:#94a3b8;font-size:0.95rem;"><i class="fas fa-spinner fa-spin" style="margin-right:0.5rem;"></i>Connexion…</div>
+            </div>
+
+            <!-- State: error -->
+            <div id="ss-error" style="display:none;">
+                <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:1rem;margin-bottom:1rem;color:#fca5a5;font-size:0.9rem;" id="ss-error-msg"></div>
+                <button onclick="ssRetry()" style="width:100%;padding:0.85rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;font-size:0.95rem;cursor:pointer;font-family:inherit;">
+                    <i class="fas fa-sync"></i> Réessayer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Inactivity warning overlay ── -->
+    <div id="inactivity-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;">
+        <div style="background:#12121a;border:1px solid rgba(245,158,11,0.4);border-radius:16px;padding:2.5rem;max-width:380px;text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:1rem;">⏰</div>
+            <h3 style="color:#f8fafc;margin-bottom:0.5rem;">Toujours là ?</h3>
+            <p style="color:#94a3b8;margin-bottom:1.5rem;font-size:0.9rem;">Déconnexion automatique dans <strong id="inactivity-countdown" style="color:#f59e0b;font-size:1.1rem;">60</strong>s</p>
+            <button onclick="ssKeepAlive()" style="width:100%;padding:0.9rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;">
+                <i class="fas fa-check"></i> Oui, je continue
+            </button>
+        </div>
+    </div>
+
+<div class="bg-animation"></div>
+
+<button class="menu-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="logo">
+            <div class="logo-icon"><i class="fas fa-tree"></i></div>
+            <div class="logo-text">
+                <h1>Silent Oak</h1>
+                <span>Management Hub</span>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li><button class="nav-link active" onclick="switchTab('dashboard', this)"><i class="fas fa-chart-line"></i><span>Tableau de Bord</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('stock', this)"><i class="fas fa-boxes"></i><span>Gestion des Stocks</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('purchases', this)"><i class="fas fa-shopping-cart"></i><span>Achats Futurs</span><span class="nav-badge" id="purchase-badge">0</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('design', this)"><i class="fas fa-palette"></i><span>DA du Groupe</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('contacts', this)"><i class="fas fa-address-book"></i><span>Contacts</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('tasks', this)"><i class="fas fa-tasks"></i><span>Tâches</span><span class="nav-badge" id="task-badge">0</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('agenda', this)"><i class="fas fa-calendar-alt"></i><span>Agenda & Objectifs</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('websites', this)"><i class="fas fa-globe"></i><span>Sites Web</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('checklist', this)"><i class="fas fa-clipboard-check"></i><span>Checklist Concert</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
+        </ul>
+
+                <div class="sidebar-footer">
+            <div class="save-status" id="save-status"><i class="fas fa-check-circle"></i><span>Auto-sauvegardé</span></div>
+            <div id="session-info" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.5rem;padding:0.5rem 0.75rem;background:var(--bg-tertiary);border-radius:8px;">
+                <span id="session-user-dot" style="width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0;display:inline-block;"></span>
+                <span id="session-user-label">—</span>
+                <button onclick="ssDisconnect()" title="Se déconnecter" style="margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font-size:0.8rem;opacity:0.7;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+            <div id="session-timer-bar" style="height:3px;background:var(--bg-tertiary);border-radius:2px;margin-bottom:0.75rem;overflow:hidden;">
+                <div id="session-timer-fill" style="height:100%;width:100%;background:var(--accent-gradient);border-radius:2px;transition:width 1s linear;"></div>
+            </div>
+        </div>
+        </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+        <!-- Dashboard -->
+        <div id="dashboard" class="tab-content active">
+            <div class="header">
+                <h2>Tableau de Bord</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openModal('quick-add')"><i class="fas fa-plus"></i> Ajout Rapide</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">Tâches en cours</div><div class="stat-value" id="stat-tasks">0</div><div class="stat-change">Total actives</div></div>
+                <div class="stat-card"><div class="stat-label">Prochains concerts</div><div class="stat-value" id="stat-events">0</div><div class="stat-change">À venir</div></div>
+                <div class="stat-card"><div class="stat-label">Budget disponible</div><div class="stat-value" id="stat-budget">0€</div><div class="stat-change">Mis à jour</div></div>
+                <div class="stat-card"><div class="stat-label">Contacts actifs</div><div class="stat-value" id="stat-contacts">0</div><div class="stat-change">Dans le réseau</div></div>
+            </div>
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="switchTabByName('tasks')"><i class="fas fa-check-circle"></i> Voir les tâches</button>
+                <button class="quick-action-btn" onclick="switchTabByName('agenda')"><i class="fas fa-calendar"></i> Calendrier</button>
+                <button class="quick-action-btn" onclick="switchTabByName('stock')"><i class="fas fa-box"></i> Inventaire</button>
+                <button class="quick-action-btn" onclick="switchTabByName('contacts')"><i class="fas fa-user-plus"></i> Nouveau Contact</button>
+            </div>
+        </div>
+
+        <!-- Stock -->
+        <div id="stock" class="tab-content">
+            <div class="header">
+                <h2>Gestion des Stocks</h2>
+                <div class="header-actions" id="stock-header-actions">
+                    <button class="btn-secondary" onclick="switchStockView('inventaire',this)" id="btn-stock-inv" style="background:var(--accent-gradient);color:white;border:none;font-size:0.85rem;padding:0.6rem 1rem;"><i class="fas fa-boxes"></i> Inventaire</button>
+                    <button class="btn-secondary" onclick="switchStockView('merch',this)" id="btn-stock-merch" style="font-size:0.85rem;padding:0.6rem 1rem;"><i class="fas fa-cash-register"></i> Merch / Caisse</button>
+                    <button class="btn-primary" onclick="openModal('add-stock')" id="btn-stock-add"><i class="fas fa-plus"></i> Ajouter un article</button>
+                </div>
+            </div>
+
+            <!-- Vue Inventaire -->
+            <div id="stock-view-inventaire">
+                <div class="cards-grid" id="stock-list"></div>
+            </div>
+
+            <!-- Vue Merch / Caisse -->
+            <div id="stock-view-merch" style="display:none;">
+
+                <!-- Stats bar -->
+                <div class="stats-grid" style="margin-bottom:1.5rem;">
+                    <div class="stat-card">
+                        <div class="stat-label">Total encaissé</div>
+                        <div class="stat-value" id="caisse-total" style="-webkit-text-fill-color:var(--success);color:var(--success);">0€</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Articles vendus</div>
+                        <div class="stat-value" id="caisse-vendus">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Transactions</div>
+                        <div class="stat-value" id="caisse-nb-tx">0</div>
+                    </div>
+                    <div class="stat-card" style="cursor:pointer;" onclick="exportCaisseToFinance()">
+                        <div class="stat-label">Enregistrer en Finance</div>
+                        <div style="font-size:1.4rem;margin-top:0.25rem;"><i class="fas fa-arrow-right" style="color:var(--accent-primary);"></i></div>
+                        <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.2rem;">Fin d'événement →</div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:1.5rem;align-items:start;">
+
+                    <!-- LEFT: Calculette / Vente rapide -->
+                    <div>
+                        <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.75rem;font-weight:700;"><i class="fas fa-cash-register" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Caisse — Vente rapide</h3>
+
+                        <!-- Panier en cours -->
+                        <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem;">
+                            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.6rem;">Panier en cours</div>
+                            <div id="panier-items" style="min-height:40px;margin-bottom:0.75rem;"></div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:0.6rem;border-top:1px solid var(--border);">
+                                <span style="font-weight:700;font-size:1.1rem;">Total</span>
+                                <span id="panier-total" style="font-weight:800;font-size:1.4rem;color:var(--success);">0.00€</span>
+                            </div>
+                            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                                <button onclick="clearPanier()" class="btn-secondary" style="flex:1;padding:0.6rem;font-size:0.85rem;"><i class="fas fa-times"></i> Vider</button>
+                                <button onclick="validerVente()" class="btn-primary" style="flex:2;padding:0.6rem;font-size:0.9rem;font-weight:700;"><i class="fas fa-check"></i> Encaisser</button>
+                            </div>
+                        </div>
+
+                        <!-- Calculette rapide (montant libre) -->
+                        <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:1rem;">
+                            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.6rem;"><i class="fas fa-calculator" style="margin-right:0.3rem;"></i>Montant libre</div>
+                            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                                <input id="caisse-free-label" type="text" placeholder="Libellé (ex: Don)" style="flex:1;padding:0.5rem 0.7rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                                <input id="caisse-free-amount" type="number" placeholder="0.00" step="0.01" min="0" style="width:90px;padding:0.5rem 0.7rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;text-align:right;">
+                            </div>
+                            <button onclick="addFreeToPanier()" class="btn-secondary" style="width:100%;padding:0.5rem;font-size:0.85rem;display:flex;align-items:center;justify-content:center;gap:0.4rem;"><i class="fas fa-plus"></i> Ajouter au panier</button>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Articles merch cliquables + journal -->
+                    <div>
+                        <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.75rem;font-weight:700;"><i class="fas fa-tshirt" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Articles Merch</h3>
+                        <div id="merch-buttons" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.25rem;"></div>
+
+                        <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.75rem;font-weight:700;"><i class="fas fa-chart-bar" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Récap par article</h3>
+                        <div id="caisse-recap" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.25rem;"></div>
+
+                        <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.75rem;font-weight:700;"><i class="fas fa-list-alt" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Journal des ventes
+                            <span id="caisse-date-label" style="font-size:0.7rem;color:var(--text-secondary);margin-left:0.5rem;font-weight:400;text-transform:none;letter-spacing:0;"></span>
+                        </h3>
+                        <div id="caisse-journal" style="max-height:360px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(99,102,241,0.3) transparent;"></div>
+                        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                            <button onclick="exportCaisseToFinance()" class="btn-primary" style="flex:1;font-size:0.85rem;padding:0.65rem;"><i class="fas fa-wallet"></i> Enregistrer en Finance</button>
+                            <button onclick="clearCaisse()" class="btn-secondary" style="font-size:0.85rem;padding:0.65rem;" title="Réinitialiser la caisse"><i class="fas fa-trash"></i> RAZ Caisse</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchases -->
+        <div id="purchases" class="tab-content">
+            <div class="header">
+                <h2>Achats Futurs</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openModal('add-purchase')"><i class="fas fa-plus"></i> Ajouter un achat</button>
+                </div>
+            </div>
+            <div id="purchase-list"></div>
+        </div>
+
+        <!-- Design -->
+        <div id="design" class="tab-content">
+            <div class="header">
+                <h2>DA du Groupe</h2>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="openModal('edit-da')" style="display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-pen"></i> Modifier la DA</button>
+                    <button class="btn-primary" onclick="openModal('add-design')"><i class="fas fa-plus"></i> Nouvelle idée</button>
+                </div>
+            </div>
+            <!-- DA établie dynamique -->
+            <div class="card" style="margin-bottom:2rem;">
+                <h3 style="margin-bottom:1.25rem;font-family:'Space Grotesk',sans-serif;"><i class="fas fa-star" style="color:var(--accent-primary);margin-right:0.5rem;"></i>Direction Artistique Établie</h3>
+                <div id="da-etablie-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;"></div>
+            </div>
+            <!-- Séparateur -->
+            <h3 style="margin-bottom:1rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-size:0.8rem;font-weight:700;"><i class="fas fa-lightbulb" style="margin-right:0.5rem;color:var(--warning);"></i>Idées & Inspirations en cours</h3>
+            <div class="cards-grid" id="design-list"></div>
+        </div>
+
+        <!-- Contacts -->
+        <div id="contacts" class="tab-content">
+            <div class="header">
+                <h2>Contacts</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openModal('add-contact')"><i class="fas fa-plus"></i> Ajouter un contact</button>
+                </div>
+            </div>
+            <div class="contact-categories">
+                <button class="category-btn active" onclick="filterContacts('all', this)">Tous</button>
+                <button class="category-btn" onclick="filterContacts('studio', this)">Studios</button>
+                <button class="category-btn" onclick="filterContacts('label', this)">Labels</button>
+                <button class="category-btn" onclick="filterContacts('concert', this)">Organisateurs</button>
+                <button class="category-btn" onclick="filterContacts('salle', this)">Salles</button>
+                <button class="category-btn" onclick="filterContacts('presse', this)">Presse</button>
+                <button class="category-btn" onclick="filterContacts('autre', this)">Autres</button>
+                <button class="category-btn" onclick="filterContacts('musicien', this)">Musiciens</button>
+                <button class="category-btn" onclick="filterContacts('groupe', this)">Groupes</button>
+            </div>
+            <div id="contact-list"></div>
+        </div>
+
+        <!-- Tasks -->
+        <div id="tasks" class="tab-content">
+            <div class="header">
+                <h2>Tâches à faire</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openModal('add-task')"><i class="fas fa-plus"></i> Nouvelle tâche</button>
+                </div>
+            </div>
+            <div id="task-list"></div>
+        </div>
+
+        <!-- Agenda -->
+        <div id="agenda" class="tab-content">
+            <div class="header">
+                <h2>Agenda & Objectifs</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openModal('add-event')"><i class="fas fa-plus"></i> Ajouter un événement</button>
+                </div>
+            </div>
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <h3 id="current-month">Mois</h3>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn-icon" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                        <button class="btn-icon" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendar"></div>
+            </div>
+            <div id="event-list"></div>
+        </div>
+
+        <!-- Websites -->
+        <div id="websites" class="tab-content">
+            <div class="header">
+                <h2>Sites Web & Liens</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openModal('add-link')"><i class="fas fa-plus"></i> Ajouter un lien</button>
+                </div>
+            </div>
+            <div id="links-list"></div>
+        </div>
+
+        <!-- Setlist -->
+        <div id="setlist" class="tab-content">
+            <div class="header">
+                <h2>Setlist & Répertoire</h2>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="switchSetlistView('repertoire',this)" id="btn-view-rep" style="font-size:0.85rem;padding:0.6rem 1rem;background:var(--accent-gradient);color:white;border:none;"><i class="fas fa-music"></i> Répertoire</button>
+                    <button class="btn-secondary" onclick="switchSetlistView('builder',this)" id="btn-view-build" style="font-size:0.85rem;padding:0.6rem 1rem;"><i class="fas fa-list-ol"></i> Créer Setlist</button>
+                    <button class="btn-primary" onclick="openModal('add-song')" id="btn-add-song"><i class="fas fa-plus"></i> Ajouter un titre</button>
+                </div>
+            </div>
+            <!-- Repertoire view -->
+            <div id="setlist-view-repertoire">
+                <div id="setlist-list"></div>
+                <!-- Saved setlists shown in repertoire view too -->
+                <div style="margin-top:2rem;">
+                    <h3 style="margin-bottom:1rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);font-weight:700;"><i class="fas fa-bookmark" style="margin-right:0.5rem;color:var(--accent-primary);"></i>Setlists sauvegardées <span id="setlist-count-badge" style="background:var(--accent-primary);color:white;font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:10px;margin-left:0.35rem;"></span></h3>
+                    <div id="saved-setlists-list-rep"></div>
+                </div>
+            </div>
+            <!-- Setlist builder view -->
+            <div id="setlist-view-builder" style="display:none;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                    <!-- Left: song pool -->
+                    <div>
+                        <h3 style="margin-bottom:1rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);"><i class="fas fa-music" style="margin-right:0.5rem;"></i>Répertoire disponible</h3>
+                        <div id="setlist-pool"></div>
+                    </div>
+                    <!-- Right: setlist builder -->
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                            <h3 style="font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);"><i class="fas fa-list-ol" style="margin-right:0.5rem;"></i>Nouvelle Setlist</h3>
+                            <button class="btn-primary" onclick="saveSetlistBuilder()" style="font-size:0.8rem;padding:0.5rem 1rem;"><i class="fas fa-save"></i> Sauvegarder</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0.75rem;">
+                            <input id="setlist-name-input" type="text" placeholder="Nom de la setlist (ex: Concert Paris)" style="width:100%;padding:0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;">
+                        </div>
+                        <div id="setlist-builder-list" style="min-height:200px;background:var(--bg-secondary);border:1px dashed var(--border);border-radius:12px;padding:0.75rem;">
+                            <p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:2rem 0;"><i class="fas fa-arrow-left" style="margin-right:0.5rem;"></i>Cliquez sur un titre pour l'ajouter</p>
+                        </div>
+                        <div id="setlist-builder-stats" style="margin-top:0.75rem;font-size:0.85rem;color:var(--text-secondary);"></div>
+                    </div>
+                </div>
+                <!-- Saved setlists -->
+                <div style="margin-top:2rem;">
+                    <h3 style="margin-bottom:1rem;font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);"><i class="fas fa-bookmark" style="margin-right:0.5rem;color:var(--accent-primary);"></i>Setlists sauvegardées</h3>
+                    <div id="saved-setlists-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checklist Concert -->
+        <div id="checklist" class="tab-content">
+            <div class="header">
+                <h2>Checklist Concert</h2>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="openModal('manage-checklist-members')" style="display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-users"></i> Musiciens</button>
+                    <button class="btn-secondary" onclick="openModal('manage-gear-library')" style="display:flex;align-items:center;gap:0.5rem;border-color:var(--accent-primary);color:var(--accent-primary);"><i class="fas fa-toolbox"></i> Bibliothèque</button>
+                    <button class="btn-primary" onclick="exportChecklistPDF()"><i class="fas fa-file-pdf"></i> Exporter PDF</button>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start;">
+                <!-- Left: gear library + targeting -->
+                <div style="position:sticky;top:1rem;">
+                    <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.75rem;font-weight:700;"><i class="fas fa-toolbox" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Bibliothèque de matériel</h3>
+
+                    <!-- Target: musician -->
+                    <div style="background:var(--bg-tertiary);border:1px solid var(--border);border-radius:10px;padding:0.75rem;margin-bottom:0.75rem;">
+                        <label style="font-size:0.72rem;color:var(--text-secondary);display:block;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.5px;">Musicien cible</label>
+                        <select id="gear-target-musician" onchange="onTargetMusicianChange()" style="width:100%;padding:0.45rem 0.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;margin-bottom:0.6rem;">
+                            <option value="">— Choisir un musicien —</option>
+                        </select>
+                        <label style="font-size:0.72rem;color:var(--text-secondary);display:block;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.5px;">Groupe cible</label>
+                        <div style="display:flex;gap:0.4rem;">
+                            <select id="gear-target-group" style="flex:1;padding:0.45rem 0.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                                <option value="">— Choisir un groupe —</option>
+                            </select>
+                            <button onclick="promptCreateGroup()" class="btn-icon" style="width:32px;height:32px;background:var(--accent-gradient);color:white;border-radius:6px;flex-shrink:0;" title="Nouveau groupe"><i class="fas fa-plus" style="font-size:0.75rem;"></i></button>
+                        </div>
+                        <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.5rem;line-height:1.4;"><i class="fas fa-hand-pointer" style="margin-right:0.3rem;opacity:0.6;"></i>Cliquez sur un article ci-dessous pour l'ajouter au groupe sélectionné</p>
+                    </div>
+
+                    <!-- Library items -->
+                    <div id="gear-library-panel" style="max-height:55vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(99,102,241,0.3) transparent;padding-right:2px;"></div>
+                </div>
+
+                <!-- Right: musicians checklists -->
+                <div>
+                    <h3 style="font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.75rem;font-weight:700;"><i class="fas fa-users" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Checklists par musicien</h3>
+                    <div id="checklist-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Finance -->
+        <div id="finance" class="tab-content">
+            <div class="header">
+                <h2>Finance & Budget</h2>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="openModal('manage-members')" style="display:flex;align-items:center;gap:0.5rem;"><i class="fas fa-users"></i> Membres</button>
+                    <button class="btn-primary" onclick="openModal('add-transaction')"><i class="fas fa-plus"></i> Ajouter</button>
+                </div>
+            </div>
+            <div class="stats-grid" style="margin-bottom:1.5rem;">
+                <div class="stat-card"><div class="stat-label">Total Recettes</div><div class="stat-value" style="-webkit-text-fill-color:var(--success);color:var(--success)" id="total-income">0€</div></div>
+                <div class="stat-card"><div class="stat-label">Total Dépenses</div><div class="stat-value" style="-webkit-text-fill-color:var(--danger);color:var(--danger)" id="total-expense">0€</div></div>
+                <div class="stat-card"><div class="stat-label">Balance</div><div class="stat-value" id="total-balance">0€</div></div>
+            </div>
+            <div id="tricount-section" style="display:none;margin-bottom:2rem;">
+                <h3 style="margin-bottom:1rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-size:0.8rem;font-weight:700;"><i class="fas fa-balance-scale" style="margin-right:0.5rem;"></i>Soldes par membre</h3>
+                <div id="members-balances" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.75rem;margin-bottom:1.5rem;"></div>
+                <h3 style="margin-bottom:1rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-size:0.8rem;font-weight:700;"><i class="fas fa-exchange-alt" style="margin-right:0.5rem;"></i>Remboursements suggérés</h3>
+                <div id="settlements" style="margin-bottom:1.5rem;"></div>
+            </div>
+            <div id="member-filter-bar" style="display:none;margin-bottom:1.25rem;overflow-x:auto;scrollbar-width:none;">
+                <div style="display:flex;gap:0.5rem;min-width:max-content;">
+                    <button class="category-btn active" onclick="filterTransactions('all',this)">Tous</button>
+                    <div id="member-filter-btns" style="display:contents;"></div>
+                </div>
+            </div>
+            <div class="cards-grid" id="transaction-list"></div>
+        </div>
+    </main>
+</div>
+
+    <!-- Bottom nav (mobile) -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <div class="bottom-nav-inner">
+            <button class="bottom-nav-btn active" onclick="switchTabMobile('dashboard',this)">
+                <i class="fas fa-chart-line"></i>Bord
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('stock',this)">
+                <i class="fas fa-boxes"></i>Stock
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('purchases',this)">
+                <i class="fas fa-shopping-cart"></i>Achats
+                <span class="bottom-nav-badge" id="bnav-purchase-badge">0</span>
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('design',this)">
+                <i class="fas fa-palette"></i>DA
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('contacts',this)">
+                <i class="fas fa-address-book"></i>Contacts
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('tasks',this)">
+                <i class="fas fa-tasks"></i>Tâches
+                <span class="bottom-nav-badge" id="bnav-task-badge">0</span>
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('agenda',this)">
+                <i class="fas fa-calendar-alt"></i>Agenda
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('websites',this)">
+                <i class="fas fa-globe"></i>Sites
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('checklist',this)">
+                <i class="fas fa-clipboard-check"></i>Check
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('setlist',this)">
+                <i class="fas fa-music"></i>Setlist
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('finance',this)">
+                <i class="fas fa-wallet"></i>Finance
+            </button>
+        </div>
+    </nav>
+
+    <!-- Floating save button (mobile) -->
+    <button class="mobile-save-fab" onclick="ssDisconnect()" title="Se déconnecter" style="background:var(--danger)!important;">
+        <i class="fas fa-floppy-disk"></i>
+    </button>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-title">Titre</h3>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+            <button class="btn-primary" onclick="saveCurrentForm()"><i class="fas fa-save"></i> Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Opération réussie</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  APPS SCRIPT CONFIG
+// ═══════════════════════════════════════════════════════════
+const SCRIPT_URL      = 'https://script.google.com/macros/s/AKfycbyc12tB3OigfHLRD4vbhP6Eoblxp5tMSvz8v-YPxNxt42Yicvti-5UTVnnlUmViKAgd/exec';
+const SESSION_TTL_MS  = 5 * 60 * 1000;   // 5 min
+const INACTIVITY_WARN = 4 * 60 * 1000;   // warning à 4 min
+const HEARTBEAT_MS    = 60 * 1000;        // heartbeat toutes les 60s
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[] };
+let currentMonth  = new Date();
+let contactFilter = 'all';
+let modalType = '';
+let editId    = null;
+
+// Session
+let sessionUser    = '';
+let sessionExpires = null;
+let heartbeatTimer  = null;
+let inactivityTimer = null;
+let countdownTimer  = null;
+let lastActivity    = Date.now();
+
+// ═══════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════
+async function initApp() {
+    const saved = sessionStorage.getItem('soSession');
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            if (s.user && Date.now() < new Date(s.expires).getTime()) {
+                sessionUser = s.user;
+                const res   = await apsFetch('acquire', { user: sessionUser });
+                if (res.ok) {
+                    sessionExpires = res.expires;
+                    await loadDataFromServer(res.data);
+                    showApp(); return;
+                }
+            }
+        } catch(e) {}
+        sessionStorage.removeItem('soSession');
+    }
+    document.getElementById('session-screen').style.display = 'flex';
+    setTimeout(() => document.getElementById('ss-name').focus(), 100);
+}
+
+// ── Session UI states ──
+function ssShow(state) {
+    ['ss-enter','ss-occupied','ss-loading','ss-error'].forEach(id => {
+        document.getElementById(id).style.display = (id === 'ss-'+state) ? '' : 'none';
+    });
+}
+
+async function ssConnect() {
+    const nameEl = document.getElementById('ss-name');
+    const name   = (nameEl?.value || '').trim();
+    if (!name) { nameEl?.focus(); return; }
+    ssShow('loading');
+    try {
+        const res = await apsFetch('acquire', { user: name });
+        if (res.ok) {
+            sessionUser    = name;
+            sessionExpires = res.expires;
+            await loadDataFromServer(res.data);
+            document.getElementById('session-screen').style.display = 'none';
+            showApp();
+        } else if (res.reason === 'occupied') {
+            document.getElementById('ss-occupied-msg').innerHTML =
+                '<strong style="color:#f8fafc">' + res.occupiedBy + '</strong> est connecté(e).<br>' +
+                'Déconnexion auto dans <strong>' + Math.ceil(res.remainingSeconds/60) + ' min</strong>.';
+            ssShow('occupied');
+        } else {
+            document.getElementById('ss-error-msg').textContent = 'Erreur : ' + (res.reason || 'inconnue');
+            ssShow('error');
+        }
+    } catch(e) {
+        document.getElementById('ss-error-msg').textContent = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+        ssShow('error');
+    }
+}
+
+async function ssForceEnter() {
+    const name = (document.getElementById('ss-name')?.value || '').trim();
+    if (!name) { ssShow('enter'); return; }
+    ssShow('loading');
+    try {
+        const res = await apsFetch('acquire', { user: name, force: true });
+        if (res.ok) {
+            sessionUser    = name;
+            sessionExpires = res.expires;
+            await loadDataFromServer(res.data);
+            document.getElementById('session-screen').style.display = 'none';
+            showApp();
+        } else {
+            document.getElementById('ss-error-msg').textContent = 'Erreur : ' + (res.reason||'inconnue');
+            ssShow('error');
+        }
+    } catch(e) {
+        document.getElementById('ss-error-msg').textContent = 'Erreur de connexion.';
+        ssShow('error');
+    }
+}
+
+function ssCheckAgain() { ssShow('enter'); }
+function ssRetry()      { ssShow('enter'); }
+
+async function ssDisconnect() {
+    if (!sessionUser) return;
+    if (!confirm('Se déconnecter ?')) return;
+    stopHeartbeat(); stopInactivityWatch();
+    try { await apsFetch('release', { user: sessionUser }); } catch(e) {}
+    sessionUser = ''; sessionStorage.removeItem('soSession');
+    ssShow('enter');
+    document.getElementById('ss-name').value = '';
+    document.getElementById('session-screen').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SHOW APP
+// ═══════════════════════════════════════════════════════════
+function showApp() {
+    document.getElementById('session-screen').style.display     = 'none';
+    document.getElementById('inactivity-overlay').style.display = 'none';
+    updateSessionUI();
+    updateUI(); renderCalendar();
+    startHeartbeat(); startInactivityWatch();
+    sessionStorage.setItem('soSession', JSON.stringify({ user: sessionUser, expires: sessionExpires }));
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SESSION UI
+// ═══════════════════════════════════════════════════════════
+function updateSessionUI() {
+    const label = document.getElementById('session-user-label');
+    if (label) label.textContent = sessionUser || '—';
+    updateTimerBar();
+}
+
+function updateTimerBar() {
+    const fill = document.getElementById('session-timer-fill');
+    if (!fill || !sessionExpires) return;
+    const remaining = Math.max(0, new Date(sessionExpires).getTime() - Date.now());
+    const pct = Math.min(100, (remaining / SESSION_TTL_MS) * 100);
+    fill.style.width      = pct + '%';
+    fill.style.background = pct < 25 ? 'var(--danger)' : pct < 50 ? 'var(--warning)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HEARTBEAT
+// ═══════════════════════════════════════════════════════════
+function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatTimer = setInterval(async () => {
+        if (!sessionUser) return;
+        try {
+            const res = await apsFetch('renew', { user: sessionUser });
+            if (res.ok) {
+                sessionExpires = res.expires;
+                sessionStorage.setItem('soSession', JSON.stringify({ user: sessionUser, expires: sessionExpires }));
+                updateTimerBar();
+            } else {
+                showToast('Session expirée — vous avez été déconnecté(e)', true);
+                await autoDisconnect();
+            }
+        } catch(e) { console.warn('Heartbeat failed', e); }
+    }, HEARTBEAT_MS);
+    setInterval(updateTimerBar, 5000);
+}
+function stopHeartbeat() {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INACTIVITY WATCH
+// ═══════════════════════════════════════════════════════════
+function startInactivityWatch() {
+    stopInactivityWatch();
+    ['mousemove','keydown','click','touchstart','scroll'].forEach(ev =>
+        document.addEventListener(ev, resetActivity, { passive: true }));
+    inactivityTimer = setInterval(checkInactivity, 10000);
+}
+function stopInactivityWatch() {
+    if (inactivityTimer) { clearInterval(inactivityTimer); inactivityTimer = null; }
+    if (countdownTimer)  { clearInterval(countdownTimer);  countdownTimer  = null; }
+    ['mousemove','keydown','click','touchstart','scroll'].forEach(ev =>
+        document.removeEventListener(ev, resetActivity));
+}
+function resetActivity() {
+    lastActivity = Date.now();
+    const ov = document.getElementById('inactivity-overlay');
+    if (ov && ov.style.display !== 'none') ssKeepAlive();
+}
+function checkInactivity() {
+    if (!sessionUser) return;
+    if (Date.now() - lastActivity >= INACTIVITY_WARN) showInactivityWarning();
+}
+
+let countdownValue = 60;
+function showInactivityWarning() {
+    const ov = document.getElementById('inactivity-overlay');
+    if (!ov || ov.style.display === 'flex') return;
+    ov.style.display = 'flex';
+    countdownValue   = 60;
+    document.getElementById('inactivity-countdown').textContent = countdownValue;
+    countdownTimer   = setInterval(() => {
+        countdownValue--;
+        const el = document.getElementById('inactivity-countdown');
+        if (el) el.textContent = countdownValue;
+        if (countdownValue <= 0) { clearInterval(countdownTimer); countdownTimer = null; autoDisconnect(); }
+    }, 1000);
+}
+function ssKeepAlive() {
+    const ov = document.getElementById('inactivity-overlay');
+    if (ov) ov.style.display = 'none';
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    lastActivity = Date.now();
+    if (sessionUser) apsFetch('renew', { user: sessionUser }).then(r => { if (r.ok) { sessionExpires=r.expires; updateTimerBar(); } }).catch(()=>{});
+}
+async function autoDisconnect() {
+    showToast("Déconnecté automatiquement après 5 min d'inactivité", true);
+    stopHeartbeat(); stopInactivityWatch();
+    try { if (sessionUser) await apsFetch('release', { user: sessionUser }); } catch(e) {}
+    sessionUser = ''; sessionStorage.removeItem('soSession');
+    ssShow('enter');
+    document.getElementById('ss-name').value = '';
+    document.getElementById('inactivity-overlay').style.display = 'none';
+    document.getElementById('session-screen').style.display     = 'flex';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  APPS SCRIPT FETCH
+// ═══════════════════════════════════════════════════════════
+async function apsFetch(action, body) {
+    const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action, ...body }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+}
+async function loadDataFromServer(serverData) {
+    if (serverData && typeof serverData === 'object') {
+        Object.keys(data).forEach(k => { if (serverData[k] !== undefined) data[k] = serverData[k]; });
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PERSIST
+// ═══════════════════════════════════════════════════════════
+async function persist() {
+    flashSaveStatus('saving');
+    try {
+        const res = await apsFetch('save', { user: sessionUser, data });
+        if (res.ok) {
+            flashSaveStatus('saved');
+        } else if (res.reason === 'lock_expired') {
+            flashSaveStatus('error');
+            showToast('Session expirée — reconnectez-vous', true);
+            autoDisconnect();
+        } else {
+            flashSaveStatus('error');
+            showToast('Erreur de sauvegarde : ' + res.reason, true);
+        }
+    } catch(e) {
+        flashSaveStatus('error');
+        showToast('Hors ligne — sauvegardé localement', true);
+        localStorage.setItem('silentOak_offline_' + sessionUser, JSON.stringify(data));
+    }
+    updateStats(); updateBadges();
+}
+
+function flashSaveStatus(state) {
+    const st = document.getElementById('save-status');
+    if (!st) return;
+    if (state === 'saving') {
+        st.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Sauvegarde…</span>';
+        st.classList.remove('saved');
+    } else if (state === 'saved') {
+        st.classList.add('saved');
+        st.innerHTML = '<i class="fas fa-check-circle"></i><span>Sauvegardé !</span>';
+        setTimeout(() => { st.innerHTML = '<i class="fas fa-circle"></i><span>Auto-sauvegardé</span>'; st.classList.remove('saved'); }, 2000);
+    } else {
+        st.innerHTML = '<i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><span style="color:var(--danger)">Erreur</span>';
+        setTimeout(() => { st.innerHTML = '<i class="fas fa-circle"></i><span>Auto-sauvegardé</span>'; }, 3000);
+    }
+}
+
+async function saveToFile() {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'silent-oak-backup-' + new Date().toISOString().slice(0,10) + '.json'; a.click();
+    showToast('Backup téléchargé ✓');
+}
+function importFromFile(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+        try {
+            const imp = JSON.parse(ev.target.result);
+            Object.keys(data).forEach(k => { if (imp[k]) data[k] = imp[k]; });
+            await persist(); updateUI(); showToast('Données importées ✓');
+        } catch { showToast('Fichier invalide', true); }
+    };
+    reader.readAsText(file); e.target.value = '';
+}
+
+window.addEventListener('beforeunload', () => {
+    if (sessionUser) {
+        const blob = new Blob([JSON.stringify({ action: 'release', user: sessionUser })], { type: 'application/json' });
+        navigator.sendBeacon(SCRIPT_URL, blob);
+    }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (name === 'agenda') renderCalendar();
+    if (name === 'checklist') renderChecklist();
+    if (name === 'setlist') renderSavedSetlists();
+    if (name === 'stock') { renderStock(); if (currentStockView==='merch') { renderMerchButtons(); renderCaisseJournal(); } }
+    if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('open');
+}
+
+function switchTabByName(name) {
+    const btn = [...document.querySelectorAll('.nav-link')].find(b => b.getAttribute('onclick')?.includes("'" + name + "'"));
+    switchTab(name, btn);
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+// ═══════════════════════════════════════════════════════════
+//  MODAL
+// ═══════════════════════════════════════════════════════════
+function g(id)       { const e = document.getElementById(id); return e ? e.value : ''; }
+function sv(id, val) { const e = document.getElementById(id); if (e) e.value = val ?? ''; }
+
+const FORMS = {
+    'add-stock': {
+        title: ed => ed ? "Modifier l'article" : 'Ajouter un article',
+        key: 'stock',
+        html: () => `<div class="form-group"><label>Nom de l'article</label><input id="f1" type="text" placeholder="Ex: T-shirt Silent Oak"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Catégorie</label><select id="f2"><option value="cable">Câbles</option><option value="micro">Microphones</option><option value="instrument">Instruments</option><option value="merch">Merchandising</option><option value="autre">Autre</option></select></div>
+                <div class="form-group"><label>Quantité en stock</label><input id="f3" type="number" value="1" min="0"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Prix de vente (€)</label><input id="f6" type="number" placeholder="0.00" step="0.01" min="0"></div>
+                <div class="form-group"><label>État</label><select id="f4"><option value="excellent">Excellent</option><option value="bon">Bon</option><option value="moyen">Moyen</option><option value="mauvais">À remplacer</option></select></div>
+            </div>
+            <div class="form-group"><label>Notes</label><textarea id="f5" placeholder="Emplacement, état détaillé..."></textarea></div>`,
+        collect: () => ({ name:g('f1'), category:g('f2'), quantity:g('f3'), condition:g('f4'), notes:g('f5'), price:g('f6') }),
+        fill: x => { sv('f1',x.name);sv('f2',x.category);sv('f3',x.quantity);sv('f4',x.condition);sv('f5',x.notes||'');sv('f6',x.price||''); }
+    },
+    'add-purchase': {
+        title: ed => ed ? "Modifier l'achat" : 'Ajouter un achat futur',
+        key: 'purchases',
+        html: () => `<div class="form-group"><label>Article à acheter</label><input id="f1" type="text" placeholder="Ex: Nouvelle pédale"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Budget (€)</label><input id="f2" type="number" placeholder="0"></div>
+                <div class="form-group"><label>Priorité</label><select id="f3"><option value="high">Haute</option><option value="medium">Moyenne</option><option value="low">Basse</option></select></div>
+            </div>
+            <div class="form-group"><label>Lien / Fournisseur</label><input id="f4" type="text" placeholder="URL ou nom du magasin"></div>
+            <div class="form-group"><label>Notes</label><textarea id="f5" placeholder="Pourquoi cet achat..."></textarea></div>`,
+        collect: () => ({ item:g('f1'), budget:g('f2'), priority:g('f3'), link:g('f4'), notes:g('f5') }),
+        fill: x => { sv('f1',x.item);sv('f2',x.budget);sv('f3',x.priority);sv('f4',x.link||'');sv('f5',x.notes||''); }
+    },
+    'add-design': {
+        title: ed => ed ? "Modifier l'idée" : 'Nouvelle idée de DA',
+        key: 'design',
+        html: () => `<div class="form-group"><label>Titre</label><input id="f1" type="text" placeholder="Ex: Concept artwork"></div>
+            <div class="form-group"><label>Type</label><select id="f2"><option value="visuel">Visuel / Graphisme</option><option value="scene">Scénographie</option><option value="photo">Photographie</option><option value="video">Vidéo / Clip</option><option value="merch">Design Merch</option><option value="autre">Autre</option></select></div>
+            <div class="form-group"><label>Description</label><textarea id="f3" placeholder="Décrivez votre idée..."></textarea></div>
+            <div class="form-group"><label>Références</label><input id="f4" type="text" placeholder="URLs d'inspiration"></div>`,
+        collect: () => ({ title:g('f1'), type:g('f2'), description:g('f3'), refs:g('f4') }),
+        fill: x => { sv('f1',x.title);sv('f2',x.type);sv('f3',x.description||'');sv('f4',x.refs||''); }
+    },
+    'add-contact': {
+        title: ed => ed ? 'Modifier le contact' : 'Ajouter un contact',
+        key: 'contacts',
+        html: () => `<div class="form-group"><label>Nom / Structure</label><input id="f1" type="text" placeholder="Ex: Studio XYZ"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Catégorie</label><select id="f2">
+                    <option value="studio">Studio</option>
+                    <option value="label">Label</option>
+                    <option value="concert">Organisateur</option>
+                    <option value="salle">Salle</option>
+                    <option value="presse">Presse</option>
+                    <option value="technique">Technique</option>
+                    <option value="musicien">Musicien</option>
+                    <option value="groupe">Groupe</option>
+                    <option value="autre">Autre</option>
+                </select></div>
+                <div class="form-group"><label>Téléphone</label><input id="f3" type="tel" placeholder="06 12 34 56 78"></div>
+            </div>
+            <div class="form-group"><label>Email</label><input id="f4" type="email" placeholder="contact@example.com"></div>
+            <div class="form-group"><label>Site Web / RS</label><input id="f5" type="text" placeholder="URL ou @instagram"></div>
+            <div class="form-group"><label>Notes</label><textarea id="f6" placeholder="Historique, infos importantes..."></textarea></div>`,
+        collect: () => ({ name:g('f1'), category:g('f2'), phone:g('f3'), email:g('f4'), website:g('f5'), notes:g('f6') }),
+        fill: x => { sv('f1',x.name);sv('f2',x.category);sv('f3',x.phone||'');sv('f4',x.email||'');sv('f5',x.website||'');sv('f6',x.notes||''); }
+    },
+    'add-task': {
+        title: ed => ed ? 'Modifier la tâche' : 'Nouvelle tâche',
+        key: 'tasks',
+        html: () => `<div class="form-group"><label>Titre</label><input id="f1" type="text" placeholder="Ex: Envoyer le rider technique"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Assigné à</label><input id="f2" type="text" placeholder="Nom du membre"></div>
+                <div class="form-group"><label>Échéance</label><input id="f3" type="date"></div>
+            </div>
+            <div class="form-group"><label>Priorité</label><select id="f4"><option value="high">Haute</option><option value="medium">Moyenne</option><option value="low">Basse</option></select></div>
+            <div class="form-group"><label>Description</label><textarea id="f5" placeholder="Détails..."></textarea></div>`,
+        collect: () => ({ title:g('f1'), assignee:g('f2'), deadline:g('f3'), priority:g('f4'), description:g('f5') }),
+        fill: x => { sv('f1',x.title);sv('f2',x.assignee||'');sv('f3',x.deadline||'');sv('f4',x.priority);sv('f5',x.description||''); }
+    },
+    'add-event': {
+        title: ed => ed ? "Modifier l'événement" : 'Ajouter un événement',
+        key: 'events',
+        html: () => `<div class="form-group"><label>Nom de l'événement</label><input id="f1" type="text" placeholder="Ex: Concert au Fuzz"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Date</label><input id="f2" type="date"></div>
+                <div class="form-group"><label>Heure</label><input id="f3" type="time"></div>
+            </div>
+            <div class="form-group"><label>Lieu</label><input id="f4" type="text" placeholder="Nom et adresse"></div>
+            <div class="form-group"><label>Type</label><select id="f5"><option value="concert">Concert</option><option value="repetition">Répétition</option><option value="enregistrement">Enregistrement</option><option value="meeting">Réunion</option><option value="autre">Autre</option></select></div>
+            <div class="form-group"><label>Objectifs / Notes</label><textarea id="f6" placeholder="Objectifs à atteindre..."></textarea></div>`,
+        collect: () => ({ title:g('f1'), date:g('f2'), time:g('f3'), location:g('f4'), type:g('f5'), goals:g('f6') }),
+        fill: x => { sv('f1',x.title);sv('f2',x.date||'');sv('f3',x.time||'');sv('f4',x.location||'');sv('f5',x.type);sv('f6',x.goals||''); }
+    },
+    'add-link': {
+        title: ed => ed ? 'Modifier le lien' : 'Ajouter un lien',
+        key: 'links',
+        html: () => `<div class="form-group"><label>Nom</label><input id="f1" type="text" placeholder="Ex: Notre site officiel"></div>
+            <div class="form-group"><label>URL</label><input id="f2" type="url" placeholder="https://..."></div>
+            <div class="form-group"><label>Catégorie</label><select id="f3"><option value="official">Site Officiel</option><option value="social">Réseaux Sociaux</option><option value="streaming">Streaming</option><option value="press">Presse</option><option value="tool">Outils</option><option value="autre">Autre</option></select></div>
+            <div class="form-group"><label>Description</label><input id="f4" type="text" placeholder="Courte description"></div>`,
+        collect: () => ({ name:g('f1'), url:g('f2'), category:g('f3'), description:g('f4') }),
+        fill: x => { sv('f1',x.name);sv('f2',x.url);sv('f3',x.category);sv('f4',x.description||''); }
+    },
+    'add-song': {
+        title: ed => ed ? 'Modifier le morceau' : 'Ajouter un morceau',
+        key: 'setlist',
+        html: () => `<div class="form-group"><label>Titre</label><input id="f1" type="text" placeholder="Nom du morceau"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Durée</label><input id="f2" type="text" placeholder="3:45"></div>
+                <div class="form-group"><label>BPM</label><input id="f3" type="number" placeholder="120"></div>
+            </div>
+            <div class="form-group"><label>Statut</label><select id="f4"><option value="repertoire">Au répertoire</option><option value="composition">En composition</option><option value="pause">En pause</option><option value="archive">Archivé</option></select></div>
+            <div class="form-group"><label>Notes / Paroles</label><textarea id="f5" placeholder="Structure, accords, paroles..."></textarea></div>`,
+        collect: () => ({ title:g('f1'), duration:g('f2'), bpm:g('f3'), status:g('f4'), notes:g('f5') }),
+        fill: x => { sv('f1',x.title);sv('f2',x.duration||'');sv('f3',x.bpm||'');sv('f4',x.status);sv('f5',x.notes||''); }
+    },
+    'add-transaction': {
+        title: ed => ed ? 'Modifier la transaction' : 'Nouvelle transaction',
+        key: 'transactions',
+        html: () => {
+            const memberOpts = data.members.length
+                ? '<option value="">— Aucun —</option>' + data.members.map(m=>`<option value="${m.id}">${m.name}</option>`).join('')
+                : '<option value="">Ajoutez des membres d\'abord</option>';
+            const splitOpts = data.members.length
+                ? data.members.map(m=>`<label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer;"><input type="checkbox" class="split-check" value="${m.id}" checked style="accent-color:var(--accent-primary);width:16px;height:16px;"> ${m.name}</label>`).join('')
+                : '<span style="color:var(--text-secondary);font-size:0.85rem;">Ajoutez des membres pour activer le partage</span>';
+            return `<div class="form-group"><label>Description</label><input id="f1" type="text" placeholder="Ex: Location salle"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Montant (€)</label><input id="f2" type="number" placeholder="0" step="0.01"></div>
+                <div class="form-group"><label>Type</label><select id="f3"><option value="expense">Dépense (-)</option><option value="income">Recette (+)</option></select></div>
+            </div>
+            <div class="form-group"><label>Payé par</label><select id="f6">${memberOpts}</select></div>
+            <div class="form-group"><label>Partagé entre</label>
+                <div style="background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;">${splitOpts}</div>
+            </div>
+            <div class="form-group"><label>Date</label><input id="f4" type="date"></div>
+            <div class="form-group"><label>Catégorie</label><select id="f5"><option value="concert">Concert</option><option value="merch">Merch</option><option value="studio">Studio</option><option value="transport">Transport</option><option value="equipement">Équipement</option><option value="autre">Autre</option></select></div>`;
+        },
+        collect: () => {
+            const checks = [...document.querySelectorAll('.split-check:checked')].map(c=>c.value);
+            return { description:g('f1'), amount:g('f2'), type:g('f3'), date:g('f4'), category:g('f5'), paidBy:g('f6'), splitBetween:checks };
+        },
+        fill: x => {
+            sv('f1',x.description);sv('f2',x.amount);sv('f3',x.type);sv('f4',x.date||'');sv('f5',x.category);sv('f6',x.paidBy||'');
+            if (x.splitBetween) {
+                document.querySelectorAll('.split-check').forEach(c => { c.checked = x.splitBetween.includes(c.value); });
+            }
+        }
+    }
+};
+
+function openModal(type, id) {
+    id = (id !== undefined) ? id : null;
+    modalType = type; editId = id;
+
+    if (type === 'manage-members') {
+        document.getElementById('modal-title').textContent = 'Membres du groupe';
+        document.querySelector('.modal-footer').style.display = 'none';
+        document.getElementById('modal-body').innerHTML = renderMembersModal();
+        document.getElementById('modal').classList.add('active');
+        return;
+    }
+
+    if (type === 'manage-checklist-members') {
+        document.getElementById('modal-title').textContent = 'Musiciens — Checklist';
+        document.querySelector('.modal-footer').style.display = 'none';
+        document.getElementById('modal-body').innerHTML = renderChecklistMusiciansModal();
+        document.getElementById('modal').classList.add('active');
+        return;
+    }
+
+    if (type === 'edit-da') { openDAEditModal(); return; }
+
+    if (type === 'manage-gear-library') {
+        document.getElementById('modal-title').textContent = 'Bibliothèque de matériel';
+        document.querySelector('.modal-footer').style.display = 'none';
+        document.getElementById('modal-body').innerHTML = renderGearLibraryModal();
+        document.getElementById('modal').classList.add('active');
+        return;
+    }
+
+    if (type === 'quick-add') {
+        document.getElementById('modal-title').textContent = 'Ajout Rapide';
+        document.getElementById('modal-body').innerHTML = `<div style="display:grid;gap:1rem;">
+            <button class="quick-action-btn" onclick="closeModal();setTimeout(()=>openModal('add-task'),200)" style="width:100%;justify-content:center;"><i class="fas fa-tasks"></i> Nouvelle Tâche</button>
+            <button class="quick-action-btn" onclick="closeModal();setTimeout(()=>openModal('add-event'),200)" style="width:100%;justify-content:center;"><i class="fas fa-calendar"></i> Nouvel Événement</button>
+            <button class="quick-action-btn" onclick="closeModal();setTimeout(()=>openModal('add-contact'),200)" style="width:100%;justify-content:center;"><i class="fas fa-user"></i> Nouveau Contact</button>
+            <button class="quick-action-btn" onclick="closeModal();setTimeout(()=>openModal('add-stock'),200)" style="width:100%;justify-content:center;"><i class="fas fa-box"></i> Ajouter au Stock</button>
+        </div>`;
+        document.querySelector('.modal-footer').style.display = 'none';
+        document.getElementById('modal').classList.add('active');
+        return;
+    }
+
+    document.querySelector('.modal-footer').style.display = '';
+    // Always reset save button to default handler before opening any standard form
+    document.querySelector('.modal-footer .btn-primary').onclick = saveCurrentForm;
+    const def = FORMS[type];
+    if (!def) return;
+    document.getElementById('modal-title').textContent = def.title(id !== null);
+    document.getElementById('modal-body').innerHTML = def.html();
+    document.getElementById('modal').classList.add('active');
+
+    if (id !== null) {
+        const item = data[def.key].find(x => x.id === id);
+        if (item) def.fill(item);
+    } else {
+        if (type === 'add-event'       && document.getElementById('f2')) document.getElementById('f2').valueAsDate = new Date();
+        if (type === 'add-transaction' && document.getElementById('f4')) document.getElementById('f4').valueAsDate = new Date();
+        if (type === 'add-task'        && document.getElementById('f3')) { const d=new Date();d.setDate(d.getDate()+7);document.getElementById('f3').valueAsDate=d; }
+    }
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('active'); editId = null; }
+
+function openModalWithDate(type, dateStr) {
+    openModal(type);
+    // After the modal renders, override the date field with the clicked date
+    const f2 = document.getElementById('f2');
+    if (f2 && type === 'add-event') f2.value = dateStr;
+}
+
+async function saveCurrentForm() {
+    const def = FORMS[modalType];
+    if (!def) return;
+    const fd  = def.collect();
+    const arr = data[def.key];
+    if (editId !== null) {
+        const idx = arr.findIndex(x => x.id === editId);
+        if (idx !== -1) arr[idx] = { ...arr[idx], ...fd, updatedAt: new Date().toISOString() };
+        showToast('Modifié ✓');
+    } else {
+        arr.push({ id: Date.now(), ...fd, createdAt: new Date().toISOString() });
+        showToast('Ajouté ✓');
+    }
+    await persist();
+    closeModal();
+    updateUI();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════════
+function updateUI() {
+    renderStock(); renderPurchases(); renderDesign(); renderDAEtablie(); renderContacts();
+    renderTasks(); renderEvents(); renderLinks(); renderSetlist();
+    renderTransactions(); renderChecklist(); updateStats(); updateBadges();
+}
+
+function updateStats() {
+    document.getElementById('stat-tasks').textContent    = data.tasks.filter(t=>!t.completed).length;
+    document.getElementById('stat-events').textContent   = data.events.filter(e=>new Date(e.date)>=new Date()).length;
+    document.getElementById('stat-contacts').textContent = data.contacts.length;
+    const bal = data.transactions.reduce((a,t)=>t.type==='income'?a+ +t.amount:a- +t.amount, 0);
+    document.getElementById('stat-budget').textContent   = bal.toFixed(0)+'€';
+}
+
+function updateBadges() {
+    document.getElementById('purchase-badge').textContent = data.purchases.length;
+    document.getElementById('task-badge').textContent     = data.tasks.filter(t=>!t.completed).length;
+}
+
+function aBtns(key, id, type) {
+    return `<div class="card-actions">
+        <button class="btn-icon" title="Modifier" style="color:var(--accent-primary)" onclick="openModal('${type}',${id})"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon" title="Supprimer" onclick="deleteItem('${key}',${id})"><i class="fas fa-trash"></i></button>
+    </div>`;
+}
+
+function emptyState(t, s) {
+    return `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-inbox"></i><h3>${t}</h3><p>${s}</p></div>`;
+}
+
+// ── Stock view switch ──────────────────────────────────────
+let currentStockView = 'inventaire';
+let panier = []; // [{id, name, price, qty, free}]
+
+function switchStockView(view, btn) {
+    currentStockView = view;
+    document.getElementById('stock-view-inventaire').style.display = view === 'inventaire' ? '' : 'none';
+    document.getElementById('stock-view-merch').style.display = view === 'merch' ? '' : 'none';
+    document.getElementById('btn-stock-inv').style.cssText   = view === 'inventaire' ? 'background:var(--accent-gradient);color:white;border:none;font-size:0.85rem;padding:0.6rem 1rem;border-radius:8px;cursor:pointer;' : 'font-size:0.85rem;padding:0.6rem 1rem;';
+    document.getElementById('btn-stock-merch').style.cssText = view === 'merch'      ? 'background:var(--accent-gradient);color:white;border:none;font-size:0.85rem;padding:0.6rem 1rem;border-radius:8px;cursor:pointer;' : 'font-size:0.85rem;padding:0.6rem 1rem;';
+    document.getElementById('btn-stock-add').style.display = view === 'inventaire' ? '' : 'none';
+    if (view === 'merch') { renderMerchButtons(); renderCaisseJournal(); }
+}
+
+function renderStock() {
+    const c = document.getElementById('stock-list');
+    if (!data.stock.length) { c.innerHTML = emptyState('Aucun article','Ajoutez votre matériel ou vos articles merch'); return; }
+    const catIcons = {cable:'fa-plug', micro:'fa-microphone', instrument:'fa-guitar', merch:'fa-tshirt', autre:'fa-box'};
+    c.innerHTML = data.stock.map(i => {
+        const isMerch = i.category === 'merch';
+        const icon = catIcons[i.category] || 'fa-box';
+        const qty = parseInt(i.quantity) || 0;
+        const lowStock = isMerch && qty <= 5 && qty > 0;
+        const outStock  = isMerch && qty === 0;
+        return `<div class="card" style="${outStock?'opacity:0.6;':''}">
+            <div class="card-header">
+                <div class="card-icon" style="${isMerch?'background:rgba(99,102,241,0.15);color:var(--accent-primary);':''}">
+                    <i class="fas ${icon}"></i>
+                </div>
+                ${aBtns('stock',i.id,'add-stock')}
+            </div>
+            <h3>${i.name}</h3>
+            ${isMerch && i.price ? `<div style="font-size:1.1rem;font-weight:700;color:var(--success);margin:0.25rem 0;">${parseFloat(i.price).toFixed(2)}€</div>` : ''}
+            <p>${i.notes||'Aucune note'}</p>
+            <div class="card-meta">
+                <span><i class="fas fa-layer-group"></i> ${qty} unité(s)
+                    ${lowStock ? `<span style="color:var(--warning);font-size:0.72rem;margin-left:4px;">⚠ Stock bas</span>` : ''}
+                    ${outStock  ? `<span style="color:var(--danger);font-size:0.72rem;margin-left:4px;">✕ Épuisé</span>` : ''}
+                </span>
+                <span><i class="fas fa-heartbeat"></i> ${i.condition}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+                <span class="tag" style="margin-top:0;">${i.category}</span>
+                ${isMerch ? `
+                <button onclick="quickSellOne(${i.id})" class="btn-secondary" style="font-size:0.78rem;padding:0.25rem 0.65rem;margin-left:auto;" title="Vendre 1 unité">
+                    <i class="fas fa-minus" style="font-size:0.7rem;"></i> Vendre 1
+                </button>
+                <button onclick="addMerchToPanier(${i.id})" style="font-size:0.78rem;padding:0.25rem 0.65rem;background:var(--accent-gradient);color:white;border:none;border-radius:6px;cursor:pointer;" title="Ajouter au panier">
+                    <i class="fas fa-shopping-cart" style="font-size:0.7rem;"></i> Panier
+                </button>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+    if (currentStockView === 'merch') { renderMerchButtons(); renderCaisseJournal(); }
+}
+
+// ── Merch buttons (caisse view) ────────────────────────────
+function renderMerchButtons() {
+    const merch = data.stock.filter(s => s.category === 'merch');
+    const c = document.getElementById('merch-buttons');
+    if (!c) return;
+    if (!merch.length) {
+        c.innerHTML = `<p style="color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-info-circle" style="margin-right:0.4rem;"></i>Ajoutez des articles "Merchandising" dans l'inventaire d'abord.</p>`;
+        return;
+    }
+    c.innerHTML = merch.map(item => {
+        const qty = parseInt(item.quantity) || 0;
+        const sold = (data.caisse||[]).reduce((a,t)=>a+(t.lines||[]).filter(l=>l.id===item.id).reduce((s,l)=>s+l.qty,0),0);
+        const stock = qty;
+        const disabled = stock <= 0;
+        return `<button onclick="addMerchToPanier(${item.id})" ${disabled?'disabled':''} 
+            style="padding:0.65rem 1rem;background:${disabled?'var(--bg-tertiary)':'var(--bg-secondary)'};border:1px solid ${disabled?'var(--border)':'var(--accent-primary)'};border-radius:10px;color:${disabled?'var(--text-secondary)':'var(--text-primary)'};cursor:${disabled?'not-allowed':'pointer'};transition:all 0.15s;min-width:110px;text-align:left;"
+            onmouseover="if(!this.disabled)this.style.background='var(--bg-tertiary)'" onmouseout="if(!this.disabled)this.style.background='var(--bg-secondary)'">
+            <div style="font-weight:700;font-size:0.88rem;">${item.name}</div>
+            <div style="font-size:0.78rem;color:${disabled?'var(--danger)':'var(--success)'};margin-top:2px;">${item.price?parseFloat(item.price).toFixed(2)+'€':'—'} · ${stock} en stock</div>
+        </button>`;
+    }).join('');
+}
+
+// ── Panier ─────────────────────────────────────────────────
+function addMerchToPanier(itemId) {
+    const item = data.stock.find(s=>s.id===itemId);
+    if (!item) return;
+    const stock = parseInt(item.quantity)||0;
+    const inPanier = panier.filter(p=>p.id===itemId).reduce((a,p)=>a+p.qty,0);
+    if (inPanier >= stock) { showToast('Stock insuffisant', true); return; }
+    const existing = panier.find(p=>p.id===itemId && !p.free);
+    if (existing) { existing.qty++; }
+    else { panier.push({ id:itemId, name:item.name, price:parseFloat(item.price)||0, qty:1, free:false }); }
+    renderPanier();
+    // Auto-switch to merch view
+    if (currentStockView !== 'merch') switchStockView('merch', null);
+}
+
+function addFreeToPanier() {
+    const label  = document.getElementById('caisse-free-label')?.value.trim() || 'Divers';
+    const amount = parseFloat(document.getElementById('caisse-free-amount')?.value) || 0;
+    if (amount <= 0) { showToast('Entrez un montant', true); return; }
+    panier.push({ id: 'free_'+Date.now(), name:label, price:amount, qty:1, free:true });
+    document.getElementById('caisse-free-label').value = '';
+    document.getElementById('caisse-free-amount').value = '';
+    renderPanier();
+}
+
+function removePanierLine(idx) {
+    panier.splice(idx, 1);
+    renderPanier();
+}
+
+function changePanierQty(idx, delta) {
+    panier[idx].qty = Math.max(1, panier[idx].qty + delta);
+    renderPanier();
+}
+
+function renderPanier() {
+    const c = document.getElementById('panier-items');
+    const t = document.getElementById('panier-total');
+    if (!c) return;
+    if (!panier.length) {
+        c.innerHTML = `<p style="color:var(--text-secondary);font-size:0.82rem;text-align:center;padding:0.5rem 0;">Panier vide</p>`;
+        if (t) t.textContent = '0.00€';
+        return;
+    }
+    let total = 0;
+    c.innerHTML = panier.map((line, idx) => {
+        const sub = line.price * line.qty;
+        total += sub;
+        return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="flex:1;font-size:0.83rem;">${line.name}</span>
+            <div style="display:flex;align-items:center;gap:0.25rem;">
+                <button onclick="changePanierQty(${idx},-1)" class="btn-icon" style="width:20px;height:20px;font-size:0.65rem;"><i class="fas fa-minus"></i></button>
+                <span style="font-size:0.82rem;font-weight:600;min-width:18px;text-align:center;">${line.qty}</span>
+                <button onclick="changePanierQty(${idx},1)" class="btn-icon" style="width:20px;height:20px;font-size:0.65rem;"><i class="fas fa-plus"></i></button>
+            </div>
+            <span style="font-size:0.82rem;color:var(--success);min-width:52px;text-align:right;">${sub.toFixed(2)}€</span>
+            <button onclick="removePanierLine(${idx})" class="btn-icon" style="width:20px;height:20px;font-size:0.6rem;color:var(--danger);"><i class="fas fa-times"></i></button>
+        </div>`;
+    }).join('');
+    if (t) t.textContent = total.toFixed(2) + '€';
+}
+
+async function validerVente() {
+    if (!panier.length) { showToast('Panier vide', true); return; }
+    // Check stock for merch items
+    for (const line of panier.filter(l=>!l.free)) {
+        const item = data.stock.find(s=>s.id===line.id);
+        if (!item) continue;
+        if (parseInt(item.quantity||0) < line.qty) {
+            showToast(item.name + ' : stock insuffisant', true); return;
+        }
+    }
+    // Deduct stock
+    for (const line of panier.filter(l=>!l.free)) {
+        const item = data.stock.find(s=>s.id===line.id);
+        if (item) item.quantity = String(parseInt(item.quantity||0) - line.qty);
+    }
+    // Record transaction in caisse
+    if (!data.caisse) data.caisse = [];
+    const total = panier.reduce((a,l)=>a+l.price*l.qty, 0);
+    data.caisse.push({
+        id: Date.now(),
+        ts: new Date().toISOString(),
+        lines: panier.map(l=>({id:l.id, name:l.name, price:l.price, qty:l.qty, free:l.free})),
+        total
+    });
+    panier = [];
+    await persist();
+    renderPanier();
+    renderStock();
+    renderCaisseJournal();
+    updateCaisseStats();
+    showToast('Vente encaissée ✓');
+}
+
+async function quickSellOne(itemId) {
+    const item = data.stock.find(s=>s.id===itemId);
+    if (!item) return;
+    if (parseInt(item.quantity||0) <= 0) { showToast('Stock épuisé', true); return; }
+    item.quantity = String(parseInt(item.quantity||0) - 1);
+    if (!data.caisse) data.caisse = [];
+    const price = parseFloat(item.price) || 0;
+    data.caisse.push({
+        id: Date.now(),
+        ts: new Date().toISOString(),
+        lines: [{id:item.id, name:item.name, price, qty:1, free:false}],
+        total: price
+    });
+    await persist();
+    renderStock();
+    renderCaisseJournal();
+    updateCaisseStats();
+    showToast('1 × ' + item.name + ' vendu ✓');
+}
+
+function clearPanier() { panier = []; renderPanier(); }
+
+async function clearCaisse() {
+    if (!confirm('Réinitialiser toute la caisse ? (Le stock reste tel quel)')) return;
+    data.caisse = [];
+    await persist();
+    renderCaisseJournal();
+    updateCaisseStats();
+    showToast('Caisse réinitialisée');
+}
+
+function renderCaisseJournal() {
+    const c = document.getElementById('caisse-journal');
+    if (!c) return;
+    const txns = [...(data.caisse||[])].sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+    updateCaisseStats();
+    if (!txns.length) {
+        c.innerHTML = `<p style="color:var(--text-secondary);font-size:0.84rem;text-align:center;padding:1.5rem 0;"><i class="fas fa-receipt" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;opacity:0.3;"></i>Aucune vente enregistrée</p>`;
+        return;
+    }
+    c.innerHTML = txns.map((tx, idx) => {
+        const d    = new Date(tx.ts);
+        const time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        const date = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+        const txNum = txns.length - idx; // descending label
+        const lines = tx.lines.map(l=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;padding:0.15rem 0;color:var(--text-secondary);">
+                <span>${l.qty > 1 ? `<span style="background:var(--accent-primary);color:white;border-radius:4px;padding:0 4px;font-size:0.7rem;margin-right:3px;">${l.qty}×</span>` : ''} ${l.name}</span>
+                <span style="color:var(--text-primary);font-weight:600;">${(l.price*l.qty).toFixed(2)}€</span>
+            </div>`).join('');
+        return `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;margin-bottom:0.4rem;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.05);">
+                <div style="background:var(--accent-gradient);color:white;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">#${txNum}</div>
+                <div style="flex:1;">
+                    <div style="font-size:0.72rem;color:var(--text-secondary);">${date} · ${time}</div>
+                </div>
+                <span style="font-weight:800;color:var(--success);font-size:1rem;">${tx.total.toFixed(2)}€</span>
+                <button onclick="deleteCaisseEntry(${tx.id})" class="btn-icon" style="width:22px;height:22px;font-size:0.6rem;color:var(--danger);opacity:0.4;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4" title="Annuler / Remboursement"><i class="fas fa-rotate-left"></i></button>
+            </div>
+            <div style="padding:0.35rem 0.6rem;">${lines}</div>
+        </div>`;
+    }).join('');
+}
+
+function updateCaisseStats() {
+    const txns = data.caisse || [];
+    const total  = txns.reduce((a,t)=>a+t.total, 0);
+    const vendus = txns.reduce((a,t)=>a+(t.lines||[]).reduce((s,l)=>s+l.qty,0),0);
+    const el1 = document.getElementById('caisse-total');
+    const el2 = document.getElementById('caisse-vendus');
+    const el3 = document.getElementById('caisse-nb-tx');
+    if (el1) el1.textContent = total.toFixed(2) + '€';
+    if (el2) el2.textContent = vendus;
+    if (el3) el3.textContent = txns.length;
+    // Récap par article
+    const recap = document.getElementById('caisse-recap');
+    if (recap) {
+        const byItem = {};
+        txns.forEach(t=>(t.lines||[]).forEach(l=>{
+            const key = l.id + '|' + l.name;
+            if (!byItem[key]) byItem[key] = {name:l.name, qty:0, total:0, price:l.price};
+            byItem[key].qty   += l.qty;
+            byItem[key].total += l.price * l.qty;
+        }));
+        const items = Object.values(byItem).sort((a,b)=>b.qty-a.qty);
+        if (!items.length) { recap.innerHTML = ''; }
+        else {
+            recap.innerHTML = items.map(it=>`
+                <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.7rem;font-size:0.8rem;">
+                    <span style="font-weight:600;">${it.name}</span>
+                    <span style="color:var(--accent-primary);margin-left:0.4rem;">${it.qty} vendu${it.qty>1?'s':''}</span>
+                    <span style="color:var(--success);margin-left:0.4rem;font-weight:700;">${it.total.toFixed(2)}€</span>
+                </div>`).join('');
+        }
+    }
+    const dl = document.getElementById('caisse-date-label');
+    if (dl) {
+        if (!txns.length) { dl.textContent = ''; return; }
+        const sorted = [...txns].sort((a,b)=>new Date(a.ts)-new Date(b.ts));
+        const first  = new Date(sorted[0].ts);
+        const last   = new Date(sorted[sorted.length-1].ts);
+        dl.textContent = first.toDateString()===last.toDateString()
+            ? first.toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'})
+            : first.toLocaleDateString('fr-FR') + ' → ' + last.toLocaleDateString('fr-FR');
+    }
+}
+
+async function deleteCaisseEntry(id) {
+    const tx = (data.caisse||[]).find(t=>t.id===id);
+    if (!tx) return;
+    if (!confirm('Annuler cette vente ? Le stock sera recrédité.')) return;
+    // Re-credit stock
+    (tx.lines||[]).filter(l=>!l.free).forEach(l=>{
+        const item = data.stock.find(s=>s.id===l.id);
+        if (item) item.quantity = String(parseInt(item.quantity||0) + l.qty);
+    });
+    data.caisse = data.caisse.filter(t=>t.id!==id);
+    await persist();
+    renderCaisseJournal();
+    renderStock();
+    showToast('Vente annulée, stock recrédité');
+}
+
+async function exportCaisseToFinance() {
+    const txns = data.caisse || [];
+    if (!txns.length) { showToast('Aucune vente à enregistrer', true); return; }
+    const total = txns.reduce((a,t)=>a+t.total, 0);
+    const vendus = txns.reduce((a,t)=>a+(t.lines||[]).reduce((s,l)=>s+l.qty,0),0);
+    const date = txns.length ? txns[0].ts.split('T')[0] : new Date().toISOString().split('T')[0];
+    const desc = `Ventes Merch — ${txns.length} transaction(s), ${vendus} article(s)`;
+    if (!data.transactions) data.transactions = [];
+    data.transactions.push({
+        id: Date.now(),
+        description: desc,
+        amount: total.toFixed(2),
+        type: 'income',
+        date,
+        category: 'merch',
+        paidBy: data.members[0]?.id || '',
+        splitBetween: data.members.map(m=>m.id),
+        createdAt: new Date().toISOString()
+    });
+    await persist();
+    renderTransactions();
+    showToast(`${total.toFixed(2)}€ ajouté en Finance ✓`);
+    // Ask if they want to clear caisse
+    if (confirm('Caisse enregistrée en Finance !\nVoulez-vous réinitialiser la caisse ?')) {
+        data.caisse = [];
+        await persist();
+        renderCaisseJournal();
+        updateCaisseStats();
+    }
+}
+
+function renderPurchases() {
+    const c = document.getElementById('purchase-list');
+    if (!data.purchases.length) { c.innerHTML = emptyState('Aucun achat prévu','Ajoutez vos futurs achats'); return; }
+    const sorted = [...data.purchases].sort((a,b)=>({high:3,medium:2,low:1}[b.priority]-{high:3,medium:2,low:1}[a.priority]));
+    const pColors = {high:'var(--danger)',medium:'var(--warning)',low:'var(--success)'};
+    c.innerHTML = `<div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+        <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Article</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Budget</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Priorité</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Notes</th>
+                <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${sorted.map(i=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;" onmouseover="this.style.background='var(--bg-tertiary)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">${i.item}${i.link?` <a href="${i.link}" target="_blank" style="color:var(--accent-primary);font-size:0.75rem;margin-left:0.3rem;"><i class="fas fa-external-link-alt"></i></a>`:''}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--success);font-weight:600;">${i.budget||0}€</td>
+                <td style="padding:0.6rem 0.75rem;"><span style="color:${pColors[i.priority]};font-weight:600;font-size:0.8rem;">● ${{high:'Haute',medium:'Moyenne',low:'Basse'}[i.priority]}</span></td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.notes||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;text-align:right;white-space:nowrap;">
+                    <button class="btn-icon" style="color:var(--accent-primary)" onclick="openModal('add-purchase',${i.id})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon" onclick="deleteItem('purchases',${i.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`).join('')}
+        </tbody>
+    </table></div>`;
+}
+
+const DA_DEFAULTS = [
+    {id:'da_1', icon:'fa-palette', label:'Identité Visuelle', text:'Palette sombre, typographies épurées, esthétique forêt / nature industrielle. Contraste fort entre organique et électronique.'},
+    {id:'da_2', icon:'fa-tshirt',  label:'Vêtements / Scène', text:'Tons neutres — noir, écru, kaki. Matières naturelles (lin, coton). Sobre en performance, cohérence entre membres.'},
+    {id:'da_3', icon:'fa-photo-video', label:'Photo / Vidéo', text:'Grain cinématographique, teintes désaturées. Mise en scène épurée, lumière naturelle ou scénique dramatique.'},
+    {id:'da_4', icon:'fa-lightbulb', label:'Scénographie', text:'Éclairage contrasté, effets de fumée subtils. Peu de déco — laisser la musique parler. Ambiance immersive.'},
+];
+
+function getDAEtablie() {
+    if (!data.daEtablie || !data.daEtablie.length) return DA_DEFAULTS;
+    return data.daEtablie;
+}
+
+function renderDAEtablie() {
+    const g = document.getElementById('da-etablie-grid');
+    if (!g) return;
+    const items = getDAEtablie();
+    g.innerHTML = items.map(item=>`
+        <div style="background:var(--bg-tertiary);border-radius:12px;padding:1rem;border:1px solid var(--border);position:relative;">
+            <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:0.5rem;">
+                <i class="fas ${item.icon||'fa-star'}" style="margin-right:0.4rem;"></i>${item.label}
+            </div>
+            <div style="font-size:0.9rem;line-height:1.6;">${item.text}</div>
+        </div>`).join('');
+}
+
+function openDAEditModal() {
+    const items = getDAEtablie();
+    document.getElementById('modal-title').textContent = 'Modifier la Direction Artistique';
+    document.querySelector('.modal-footer').style.display = '';
+    document.getElementById('modal-body').innerHTML = `
+        <div id="da-edit-list">
+            ${items.map((item,idx)=>`
+            <div style="background:var(--bg-tertiary);border-radius:10px;padding:0.875rem;margin-bottom:0.75rem;border:1px solid var(--border);">
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                    <input type="text" placeholder="Catégorie (ex: Identité Visuelle)" value="${item.label}" id="da-label-${idx}" style="flex:1;padding:0.5rem 0.75rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                    <button onclick="removeDAItem(${idx})" class="btn-icon" style="color:var(--danger);flex-shrink:0;" title="Supprimer"><i class="fas fa-trash"></i></button>
+                </div>
+                <textarea id="da-text-${idx}" placeholder="Description..." style="width:100%;padding:0.5rem 0.75rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;resize:vertical;min-height:70px;">${item.text}</textarea>
+            </div>`).join('')}
+        </div>
+        <button onclick="addDAItem()" class="btn-secondary" style="width:100%;justify-content:center;display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;"><i class="fas fa-plus"></i> Ajouter une catégorie</button>`;
+    document.getElementById('modal').classList.add('active');
+    // Override save button
+    document.querySelector('.modal-footer .btn-primary').onclick = saveDAEdit;
+}
+
+let _daEditItems = null;
+function addDAItem() {
+    const list = document.getElementById('da-edit-list');
+    const idx = list.querySelectorAll('[id^="da-label-"]').length;
+    const div = document.createElement('div');
+    div.style.cssText = 'background:var(--bg-tertiary);border-radius:10px;padding:0.875rem;margin-bottom:0.75rem;border:1px solid var(--border);';
+    div.innerHTML = `<div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+        <input type="text" placeholder="Catégorie (ex: Merch)" value="" id="da-label-${idx}" style="flex:1;padding:0.5rem 0.75rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+        <button onclick="this.closest('div').parentElement.remove()" class="btn-icon" style="color:var(--danger);flex-shrink:0;"><i class="fas fa-trash"></i></button>
+    </div>
+    <textarea id="da-text-${idx}" placeholder="Description..." style="width:100%;padding:0.5rem 0.75rem;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;resize:vertical;min-height:70px;"></textarea>`;
+    list.appendChild(div);
+}
+
+function removeDAItem(idx) {
+    const label = document.getElementById(`da-label-${idx}`);
+    if (label) label.closest('div[style]')?.remove();
+}
+
+async function saveDAEdit() {
+    const labels = document.querySelectorAll('[id^="da-label-"]');
+    const newItems = [];
+    labels.forEach((el,i)=>{
+        const label = el.value.trim();
+        const text = (document.getElementById(`da-text-${i}`)?.value||'').trim();
+        if (label) newItems.push({id:'da_'+Date.now()+'_'+i, icon:'fa-star', label, text});
+    });
+    data.daEtablie = newItems;
+    await persist();
+    closeModal();
+    renderDAEtablie();
+    showToast('Direction Artistique mise à jour ✓');
+}
+
+function renderDesign() {
+    const c = document.getElementById('design-list');
+    if (!data.design.length) { c.innerHTML = emptyState('Aucune idée','Stockez vos inspirations'); return; }
+    c.innerHTML = data.design.map(i => `<div class="card">
+        <div class="card-header"><div class="card-icon"><i class="fas fa-palette"></i></div>${aBtns('design',i.id,'add-design')}</div>
+        <h3>${i.title}</h3><p>${i.description||''}</p><span class="tag">${i.type}</span>
+        ${i.refs?`<div style="margin-top:0.5rem;font-size:0.8rem;color:var(--accent-primary);"><i class="fas fa-link"></i> ${i.refs}</div>`:''}
+    </div>`).join('');
+}
+
+function renderContacts() {
+    const c = document.getElementById('contact-list');
+    const list = contactFilter==='all' ? data.contacts : data.contacts.filter(x=>x.category===contactFilter);
+    if (!list.length) { c.innerHTML = emptyState('Aucun contact','Ajoutez vos contacts professionnels'); return; }
+    c.innerHTML = `<div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+        <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Nom</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Catégorie</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Téléphone</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Email</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Notes</th>
+                <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${list.map(i=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;" onmouseover="this.style.background='var(--bg-tertiary)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">${i.name}</td>
+                <td style="padding:0.6rem 0.75rem;"><span class="tag studio" style="margin-top:0;">${i.category}</span></td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);">${i.phone||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.email||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.notes||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;text-align:right;white-space:nowrap;">
+                    <button class="btn-icon" style="color:var(--accent-primary)" title="Modifier" onclick="openModal('add-contact',${i.id})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon" title="Supprimer" onclick="deleteItem('contacts',${i.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`).join('')}
+        </tbody>
+    </table></div>`;
+}
+
+function filterContacts(cat, btn) {
+    contactFilter = cat;
+    document.querySelectorAll('.category-btn').forEach(b=>b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderContacts();
+}
+
+function renderTasks() {
+    const c = document.getElementById('task-list');
+    if (!data.tasks.length) { c.innerHTML = emptyState('Aucune tâche','Créez votre première tâche'); return; }
+    const all = [...data.tasks.filter(t=>!t.completed),...data.tasks.filter(t=>t.completed)];
+    const priorityColors = {high:'var(--danger)',medium:'var(--warning)',low:'var(--success)'};
+    c.innerHTML = `<div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+        <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">
+                <th style="padding:0.6rem 0.75rem;text-align:left;width:36px;"></th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Tâche</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Assigné à</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Échéance</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Priorité</th>
+                <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${all.map(i=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.05);opacity:${i.completed?'0.55':'1'};transition:background 0.15s;" onmouseover="this.style.background='var(--bg-tertiary)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:0.6rem 0.75rem;">
+                    <button class="btn-icon" onclick="toggleTask(${i.id})" style="color:${i.completed?'var(--success)':'var(--text-secondary)'}">
+                        <i class="fas ${i.completed?'fa-check-circle':'fa-circle'}"></i>
+                    </button>
+                </td>
+                <td style="padding:0.6rem 0.75rem;font-weight:${i.completed?'400':'600'};text-decoration:${i.completed?'line-through':''}">${i.title}${i.description?`<div style="font-size:0.78rem;color:var(--text-secondary);font-weight:400;margin-top:1px;">${i.description}</div>`:''}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);">${i.assignee||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);">${i.deadline?new Date(i.deadline).toLocaleDateString('fr-FR'):'—'}</td>
+                <td style="padding:0.6rem 0.75rem;"><span style="color:${priorityColors[i.priority]};font-size:0.8rem;font-weight:600;">${{high:'● Haute',medium:'● Moyenne',low:'● Basse'}[i.priority]}</span></td>
+                <td style="padding:0.6rem 0.75rem;text-align:right;white-space:nowrap;">
+                    <button class="btn-icon" style="color:var(--accent-primary)" onclick="openModal('add-task',${i.id})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon" onclick="deleteItem('tasks',${i.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`).join('')}
+        </tbody>
+    </table></div>`;
+}
+
+async function toggleTask(id) {
+    const t = data.tasks.find(x=>x.id===id);
+    if (t) { t.completed = !t.completed; await persist(); renderTasks(); updateBadges(); }
+}
+
+function renderEvents() {
+    const c = document.getElementById('event-list');
+    const now = new Date(); now.setHours(0,0,0,0);
+    const sorted = [...data.events].filter(e=>new Date(e.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date));
+    if (!data.events.length) { c.innerHTML = emptyState('Aucun événement','Planifiez vos concerts et répétitions'); return; }
+    if (!sorted.length) { c.innerHTML = '<p style="color:var(--text-secondary);padding:1rem 0;"><i class="fas fa-check-circle" style="color:var(--success);margin-right:0.5rem;"></i>Aucun événement futur planifié.</p>'; return; }
+    c.innerHTML = `<h3 style="margin-bottom:1rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-size:0.8rem;font-weight:700;"><i class="fas fa-calendar-alt" style="margin-right:0.5rem;"></i>Événements à venir</h3>` +
+    sorted.map(i => `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;margin-bottom:0.5rem;">
+        <div style="width:44px;height:44px;border-radius:10px;background:var(--accent-gradient);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:0.7rem;font-weight:700;line-height:1.2;">
+            <span style="font-size:1rem;">${i.date?new Date(i.date).getDate():''}</span>
+            <span>${i.date?new Date(i.date).toLocaleDateString('fr-FR',{month:'short'}):''}</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:0.95rem;">${i.title}</div>
+            <div style="font-size:0.8rem;color:var(--text-secondary);">${i.time||''} ${i.location?'— '+i.location:''}</div>
+        </div>
+        <span class="tag" style="white-space:nowrap;">${i.type}</span>
+        <div class="card-actions" style="flex-shrink:0;">${aBtns('events',i.id,'add-event').replace('<div class="card-actions">','').replace('</div>','')}</div>
+    </div>`).join('');
+}
+
+function renderCalendar() {
+    const year=currentMonth.getFullYear(), month=currentMonth.getMonth();
+    const firstDay=new Date(year,month,1).getDay(), days=new Date(year,month+1,0).getDate();
+    document.getElementById('current-month').textContent = currentMonth.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    const cal=document.getElementById('calendar'); cal.innerHTML='';
+    ['D','L','M','Me','J','V','S'].forEach(d=>{
+        const div=document.createElement('div');
+        div.style.cssText='text-align:center;font-weight:600;color:var(--text-secondary);font-size:0.75rem;padding:0.25rem;';
+        div.textContent=d; cal.appendChild(div);
+    });
+    for(let i=0;i<firstDay;i++) cal.appendChild(document.createElement('div'));
+    const today=new Date();
+    for(let d=1;d<=days;d++){
+        const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dayEvents=data.events.filter(e=>e.date===ds);
+        const hasEvent=dayEvents.length>0;
+        const isToday=today.getDate()===d&&today.getMonth()===month&&today.getFullYear()===year;
+        const div=document.createElement('div');
+        div.className=`calendar-day${hasEvent?' has-event':''}${isToday?' today':''}`;
+        div.style.cssText='flex-direction:column;align-items:center;justify-content:flex-start;padding:0.2rem;font-size:0.8rem;aspect-ratio:unset;min-height:52px;';
+        div.innerHTML=`<span style="font-weight:${isToday?'700':'400'}">${d}</span>`;
+        if(hasEvent){
+            dayEvents.forEach(ev=>{
+                const dot=document.createElement('div');
+                dot.style.cssText='font-size:0.55rem;color:var(--accent-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2;margin-top:1px;';
+                dot.textContent=ev.title;
+                div.appendChild(dot);
+            });
+        }
+        div.onclick=()=>openModalWithDate('add-event', ds); cal.appendChild(div);
+    }
+}
+
+function changeMonth(d) { currentMonth.setMonth(currentMonth.getMonth()+d); renderCalendar(); }
+
+function renderLinks() {
+    const c=document.getElementById('links-list');
+    if(!data.links.length){c.innerHTML=`<div class="empty-state"><i class="fas fa-link"></i><h3>Aucun lien</h3><p>Ajoutez vos sites web</p></div>`;return;}
+    const cats={official:'Site Officiel',social:'Réseaux Sociaux',streaming:'Streaming',press:'Presse',tool:'Outils',autre:'Autre'};
+    c.innerHTML=Object.entries(cats).map(([cat,label])=>{
+        const links=data.links.filter(l=>l.category===cat);
+        if(!links.length) return '';
+        return `<h3 style="margin:1.5rem 0 1rem;color:var(--text-secondary);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;">${label}</h3>` +
+        links.map(i=>`<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
+            <a href="${i.url}" target="_blank" class="link-card" style="flex:1;margin:0;">
+                <div class="link-icon"><i class="fas fa-link"></i></div>
+                <div class="link-info"><h4>${i.name}</h4><p>${i.description||i.url}</p></div>
+                <i class="fas fa-external-link-alt" style="margin-left:auto;color:var(--text-secondary);"></i>
+            </a>
+            <button class="btn-icon" style="color:var(--accent-primary)" onclick="openModal('add-link',${i.id})"><i class="fas fa-pen"></i></button>
+            <button class="btn-icon" onclick="deleteItem('links',${i.id})"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+    }).join('');
+}
+
+let setlistBuilderItems = []; // array of song ids in current builder
+let setlistCurrentView = 'repertoire';
+
+function switchSetlistView(view, btn) {
+    setlistCurrentView = view;
+    document.getElementById('setlist-view-repertoire').style.display = view==='repertoire' ? '' : 'none';
+    document.getElementById('setlist-view-builder').style.display = view==='builder' ? '' : 'none';
+    document.getElementById('btn-view-rep').style.cssText = view==='repertoire' ? 'font-size:0.85rem;padding:0.6rem 1rem;background:var(--accent-gradient);color:white;border:none;border-radius:8px;cursor:pointer;' : 'font-size:0.85rem;padding:0.6rem 1rem;';
+    document.getElementById('btn-view-build').style.cssText = view==='builder' ? 'font-size:0.85rem;padding:0.6rem 1rem;background:var(--accent-gradient);color:white;border:none;border-radius:8px;cursor:pointer;' : 'font-size:0.85rem;padding:0.6rem 1rem;';
+    document.getElementById('btn-add-song').style.display = view==='repertoire' ? '' : 'none';
+    if (view==='builder') renderSetlistBuilder();
+}
+
+function renderSetlist() {
+    const c = document.getElementById('setlist-list');
+    if (!data.setlist.length) { c.innerHTML = emptyState('Aucun morceau','Construisez votre répertoire'); return; }
+    const statusLabels = {repertoire:'Au répertoire',composition:'En composition',pause:'En pause',archive:'Archivé'};
+    const statusColors = {repertoire:'var(--success)',composition:'var(--warning)',pause:'var(--text-secondary)',archive:'rgba(255,255,255,0.3)'};
+    c.innerHTML = `<div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+        <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--text-secondary);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;">
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">#</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Titre</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Durée</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">BPM</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Statut</th>
+                <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600;">Notes</th>
+                <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${data.setlist.map((i,idx)=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.15s;" onmouseover="this.style.background='var(--bg-tertiary)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);font-size:0.8rem;">${idx+1}</td>
+                <td style="padding:0.6rem 0.75rem;font-weight:600;">${i.title}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);">${i.duration||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);">${i.bpm||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;"><span style="color:${statusColors[i.status]};font-weight:600;font-size:0.8rem;">● ${statusLabels[i.status]||i.status}</span></td>
+                <td style="padding:0.6rem 0.75rem;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i.notes||'—'}</td>
+                <td style="padding:0.6rem 0.75rem;text-align:right;white-space:nowrap;">
+                    <button class="btn-icon" style="color:var(--accent-primary)" onclick="openModal('add-song',${i.id})"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon" onclick="deleteItem('setlist',${i.id})"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`).join('')}
+        </tbody>
+    </table></div>`;
+    if (setlistCurrentView === 'builder') renderSetlistBuilder();
+    renderSavedSetlists();
+}
+
+function renderSetlistBuilder() {
+    // Pool: available songs
+    const pool = document.getElementById('setlist-pool');
+    const songs = data.setlist.filter(s=>s.status==='repertoire'||s.status==='composition');
+    if (!songs.length) { pool.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;">Aucun morceau au répertoire.</p>'; return; }
+    pool.innerHTML = songs.map(s=>`<div onclick="addToBuilder(${s.id})" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;margin-bottom:0.4rem;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border)'">
+        <i class="fas fa-music" style="color:var(--accent-primary);font-size:0.8rem;"></i>
+        <span style="flex:1;font-size:0.88rem;font-weight:500;">${s.title}</span>
+        ${s.duration?`<span style="font-size:0.75rem;color:var(--text-secondary);">${s.duration}</span>`:''}
+        <i class="fas fa-plus" style="color:var(--success);font-size:0.75rem;"></i>
+    </div>`).join('');
+    renderBuilderList();
+    renderSavedSetlists();
+}
+
+function addToBuilder(id) {
+    setlistBuilderItems.push(id);
+    renderBuilderList();
+}
+
+function removeFromBuilder(idx) {
+    setlistBuilderItems.splice(idx, 1);
+    renderBuilderList();
+}
+
+function moveInBuilder(idx, dir) {
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= setlistBuilderItems.length) return;
+    [setlistBuilderItems[idx], setlistBuilderItems[newIdx]] = [setlistBuilderItems[newIdx], setlistBuilderItems[idx]];
+    renderBuilderList();
+}
+
+function renderBuilderList() {
+    const c = document.getElementById('setlist-builder-list');
+    if (!setlistBuilderItems.length) {
+        c.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:2rem 0;"><i class="fas fa-arrow-left" style="margin-right:0.5rem;"></i>Cliquez sur un titre pour l\'ajouter</p>';
+        document.getElementById('setlist-builder-stats').innerHTML = '';
+        return;
+    }
+    let totalSecs = 0;
+    c.innerHTML = setlistBuilderItems.map((id, idx) => {
+        const s = data.setlist.find(x=>x.id===id);
+        if (!s) return '';
+        // Parse duration mm:ss
+        if (s.duration) {
+            const parts = s.duration.split(':');
+            if (parts.length===2) totalSecs += parseInt(parts[0])*60 + parseInt(parts[1]);
+        }
+        return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.5rem;background:var(--bg-tertiary);border-radius:8px;margin-bottom:0.35rem;">
+            <span style="color:var(--text-secondary);font-size:0.75rem;min-width:18px;text-align:center;">${idx+1}</span>
+            <span style="flex:1;font-size:0.88rem;font-weight:500;">${s.title}</span>
+            ${s.duration?`<span style="font-size:0.75rem;color:var(--text-secondary);">${s.duration}</span>`:''}
+            <button onclick="moveInBuilder(${idx},-1)" class="btn-icon" style="width:24px;height:24px;font-size:0.7rem;" title="Monter"><i class="fas fa-chevron-up"></i></button>
+            <button onclick="moveInBuilder(${idx},1)" class="btn-icon" style="width:24px;height:24px;font-size:0.7rem;" title="Descendre"><i class="fas fa-chevron-down"></i></button>
+            <button onclick="removeFromBuilder(${idx})" class="btn-icon" style="width:24px;height:24px;font-size:0.7rem;color:var(--danger);" title="Retirer"><i class="fas fa-times"></i></button>
+        </div>`;
+    }).join('');
+    const mins = Math.floor(totalSecs/60), secs = totalSecs%60;
+    document.getElementById('setlist-builder-stats').innerHTML = `<i class="fas fa-clock" style="margin-right:0.4rem;color:var(--accent-primary);"></i>${setlistBuilderItems.length} titre(s) — Durée totale : ${mins}min${secs>0?' '+secs+'s':''}`;
+}
+
+async function saveSetlistBuilder() {
+    const name = document.getElementById('setlist-name-input').value.trim();
+    if (!name) { showToast('Donnez un nom à la setlist', true); return; }
+    if (!setlistBuilderItems.length) { showToast('Ajoutez au moins un titre', true); return; }
+    const songs = setlistBuilderItems.map(id=>data.setlist.find(s=>s.id===id)).filter(Boolean);
+    let totalSecs = 0;
+    songs.forEach(s=>{ if(s.duration){const p=s.duration.split(':');if(p.length===2)totalSecs+=parseInt(p[0])*60+parseInt(p[1]);} });
+    const mins = Math.floor(totalSecs/60), secs = totalSecs%60;
+    if (!data.savedSetlists) data.savedSetlists = [];
+    data.savedSetlists.push({
+        id: Date.now(),
+        name,
+        songIds: [...setlistBuilderItems],
+        totalTime: `${mins}:${String(secs).padStart(2,'0')}`,
+        count: songs.length,
+        createdAt: new Date().toISOString()
+    });
+    setlistBuilderItems = [];
+    document.getElementById('setlist-name-input').value = '';
+    await persist();
+    renderBuilderList();
+    renderSavedSetlists();
+    showToast('Setlist "' + name + '" sauvegardée ✓');
+}
+
+function renderSavedSetlists() {
+    const lists = data.savedSetlists || [];
+    
+    function buildHTML(lists) {
+        if (!lists.length) return '<p style="color:var(--text-secondary);font-size:0.85rem;">Aucune setlist sauvegardée.</p>';
+        return lists.map(sl=>{
+            const songs = (sl.songIds||[]).map(id=>data.setlist.find(s=>s.id===id)).filter(Boolean);
+            return `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+                    <div>
+                        <div style="font-weight:700;font-size:1rem;">${sl.name}</div>
+                        <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;"><i class="fas fa-music" style="margin-right:0.3rem;"></i>${sl.count} titres <i class="fas fa-clock" style="margin:0 0.3rem;"></i>${sl.totalTime}</div>
+                    </div>
+                    <button class="btn-icon" style="color:var(--danger);" onclick="deleteSetlist(${sl.id})"><i class="fas fa-trash"></i></button>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+                    ${songs.map((s,i)=>`<span style="font-size:0.78rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.5rem;">${i+1}. ${s.title}</span>`).join('')}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    const html = buildHTML(lists);
+    
+    // Update builder view panel
+    const c = document.getElementById('saved-setlists-list');
+    if (c) c.innerHTML = html;
+    
+    // Update repertoire view panel
+    const r = document.getElementById('saved-setlists-list-rep');
+    if (r) r.innerHTML = html;
+    
+    // Update count badge
+    const badge = document.getElementById('setlist-count-badge');
+    if (badge) badge.textContent = lists.length > 0 ? lists.length : '';
+}
+
+async function deleteSetlist(id) {
+    if (!confirm('Supprimer cette setlist ?')) return;
+    data.savedSetlists = (data.savedSetlists||[]).filter(s=>s.id!==id);
+    await persist(); renderSavedSetlists(); showToast('Setlist supprimée');
+}
+
+// ══════════════════════════════════════
+//  CHECKLIST CONCERT
+// ══════════════════════════════════════
+
+const GEAR_LIBRARY_DEFAULTS = [
+    {id:'gl_1',  cat:'🎸 Instruments', name:'Guitare principale'},
+    {id:'gl_2',  cat:'🎸 Instruments', name:'Guitare de rechange'},
+    {id:'gl_3',  cat:'🎸 Instruments', name:'Basse'},
+    {id:'gl_4',  cat:'🎸 Instruments', name:'Câble jack'},
+    {id:'gl_5',  cat:'🎸 Instruments', name:'Cordes de rechange'},
+    {id:'gl_6',  cat:'🎤 Voix / Micros', name:'Micro chant'},
+    {id:'gl_7',  cat:'🎤 Voix / Micros', name:'Pied de micro'},
+    {id:'gl_8',  cat:'🎤 Voix / Micros', name:'Câble XLR'},
+    {id:'gl_9',  cat:'🎤 Voix / Micros', name:'Retour monitoring'},
+    {id:'gl_10', cat:'🥁 Batterie', name:'Baguettes de rechange'},
+    {id:'gl_11', cat:'🥁 Batterie', name:'Caisse claire'},
+    {id:'gl_12', cat:'🥁 Batterie', name:'Pédale grosse caisse'},
+    {id:'gl_13', cat:'🥁 Batterie', name:'Charley'},
+    {id:'gl_14', cat:'🥁 Batterie', name:'Cymbale ride'},
+    {id:'gl_15', cat:'🥁 Batterie', name:'Cymbale crash'},
+    {id:'gl_16', cat:'🎹 Claviers', name:'Clavier / synthé'},
+    {id:'gl_17', cat:'🎹 Claviers', name:'Adaptateur secteur'},
+    {id:'gl_18', cat:'🔌 Câbles', name:'Câbles jack (x2)'},
+    {id:'gl_19', cat:'🔌 Câbles', name:'Câbles XLR (x2)'},
+    {id:'gl_20', cat:'🔌 Câbles', name:'Multiprise'},
+    {id:'gl_21', cat:'🔌 Câbles', name:'Rallonge'},
+    {id:'gl_22', cat:'🎒 Divers', name:'Rider technique'},
+    {id:'gl_23', cat:'🎒 Divers', name:'Contrat signé'},
+    {id:'gl_24', cat:'🎒 Divers', name:'Earplugs'},
+    {id:'gl_25', cat:'🎒 Divers', name:'Tenue de scène'},
+    {id:'gl_26', cat:'🎒 Divers', name:'Eau / Collation'},
+];
+
+// Musician shape: { id, name, groups: [ { id, name, items: [ {id, name, checked} ] } ] }
+
+function getGearLibrary() {
+    return (data.gearLibrary && data.gearLibrary.length) ? data.gearLibrary : GEAR_LIBRARY_DEFAULTS;
+}
+
+// ── Panel helpers ──────────────────────────────────────────
+
+function onTargetMusicianChange() {
+    const musId = document.getElementById('gear-target-musician')?.value;
+    refreshGroupSelect(musId);
+}
+
+function refreshGroupSelect(musId) {
+    const sel = document.getElementById('gear-target-group');
+    if (!sel) return;
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    sel.innerHTML = '<option value="">— Choisir un groupe —</option>';
+    if (mus && mus.groups) {
+        mus.groups.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id; opt.textContent = g.name;
+            sel.appendChild(opt);
+        });
+    }
+}
+
+function populateMusicianSelect() {
+    const sel = document.getElementById('gear-target-musician');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Choisir un musicien —</option>';
+    (data.checklistMusicians||[]).forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id; opt.textContent = m.name;
+        if (m.id === prev) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    if (prev) refreshGroupSelect(prev);
+}
+
+function promptCreateGroup() {
+    const musId = document.getElementById('gear-target-musician')?.value;
+    if (!musId) { showToast("Sélectionnez d'abord un musicien", true); return; }
+    const name = prompt('Nom du groupe (ex: SAC_ZILDJIAN, PÉDALIER…)');
+    if (!name || !name.trim()) return;
+    createGroupForMusician(musId, name.trim());
+}
+
+async function createGroupForMusician(musId, name) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    if (!mus.groups) mus.groups = [];
+    if (mus.groups.some(g=>g.name.toLowerCase()===name.toLowerCase())) {
+        showToast('Ce groupe existe déjà', true); return;
+    }
+    const group = { id: 'grp_'+Date.now(), name, items:[] };
+    mus.groups.push(group);
+    await persist();
+    refreshGroupSelect(musId);
+    const sel = document.getElementById('gear-target-group');
+    if (sel) sel.value = group.id;
+    renderChecklist();
+    showToast('Groupe "' + name + '" créé ✓');
+}
+
+// ── Library panel render ────────────────────────────────────
+
+function renderGearLibraryPanel() {
+    const panel = document.getElementById('gear-library-panel');
+    if (!panel) return;
+    populateMusicianSelect();
+    const lib = getGearLibrary();
+    const cats = {};
+    lib.forEach(item => { if (!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
+    panel.innerHTML = Object.entries(cats).map(([cat, items])=>`
+        <div style="margin-bottom:0.6rem;">
+            <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.3rem;padding:0.15rem 0.2rem;">${cat}</div>
+            ${items.map(item=>`
+                <div onclick="addGearFromLibrary('${item.id}')"
+                     style="display:flex;align-items:center;gap:0.5rem;padding:0.32rem 0.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;margin-bottom:0.22rem;cursor:pointer;font-size:0.81rem;transition:all 0.12s;"
+                     onmouseover="this.style.borderColor='var(--accent-primary)';this.style.background='var(--bg-tertiary)'"
+                     onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)'">
+                    <span style="flex:1;">${item.name}</span>
+                    <i class="fas fa-plus" style="color:var(--success);font-size:0.68rem;opacity:0.7;flex-shrink:0;"></i>
+                </div>`).join('')}
+        </div>`).join('');
+}
+
+async function addGearFromLibrary(gearId) {
+    const musId = document.getElementById('gear-target-musician')?.value;
+    const grpId = document.getElementById('gear-target-group')?.value;
+    if (!musId) { showToast('Sélectionnez un musicien', true); return; }
+    if (!grpId) { showToast('Sélectionnez ou créez un groupe', true); return; }
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus || !mus.groups) return;
+    const grp = mus.groups.find(g=>g.id===grpId);
+    if (!grp) return;
+    const lib = getGearLibrary();
+    const gearItem = lib.find(g=>g.id===gearId);
+    if (!gearItem) return;
+    if (grp.items.some(i=>i.name===gearItem.name)) { showToast(gearItem.name + ' déjà dans ce groupe', true); return; }
+    grp.items.push({ id:'item_'+Date.now(), name:gearItem.name, checked:false });
+    await persist(); renderChecklist();
+    showToast(gearItem.name + ' → ' + grp.name + ' ✓');
+}
+
+// ── Main render ─────────────────────────────────────────────
+
+function renderChecklist() {
+    const c = document.getElementById('checklist-content');
+    if (!c) return;
+    renderGearLibraryPanel();
+    if (!data.checklistMusicians || !data.checklistMusicians.length) {
+        c.innerHTML = `<div class="empty-state" style="padding:3rem 1rem;"><i class="fas fa-users"></i><h3>Aucun musicien</h3><p>Cliquez sur "Musiciens" pour ajouter les membres</p></div>`;
+        return;
+    }
+    c.innerHTML = data.checklistMusicians.map(mus => {
+        const groups = mus.groups || [];
+        const totalItems   = groups.reduce((a,g)=>a+g.items.length,0);
+        const checkedItems = groups.reduce((a,g)=>a+g.items.filter(i=>i.checked).length,0);
+        const pct = totalItems ? Math.round(checkedItems/totalItems*100) : 0;
+
+        return `<div class="card" style="margin-bottom:1rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:${groups.length?'1rem':'0.25rem'};${groups.length?'padding-bottom:0.75rem;border-bottom:1px solid var(--border);':''}" >
+                <div style="width:40px;height:40px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:1rem;flex-shrink:0;">${mus.name.charAt(0).toUpperCase()}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:1rem;">${mus.name}</div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;margin-top:3px;">
+                        <div style="flex:1;max-width:120px;height:4px;background:var(--bg-tertiary);border-radius:2px;overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:var(--accent-gradient);border-radius:2px;"></div>
+                        </div>
+                        <span style="font-size:0.7rem;color:var(--text-secondary);">${checkedItems}/${totalItems} — ${pct}%</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.3rem;">
+                    <button class="btn-icon" onclick="addGroupInline('${mus.id}')" title="Nouveau groupe" style="color:var(--accent-primary);font-size:0.75rem;"><i class="fas fa-folder-plus"></i></button>
+                    <button class="btn-icon" onclick="resetChecklistMusician('${mus.id}')" title="Tout décocher" style="font-size:0.75rem;"><i class="fas fa-undo"></i></button>
+                    <button class="btn-icon" style="color:var(--danger);font-size:0.75rem;" onclick="deleteChecklistMusician('${mus.id}')" title="Supprimer"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            ${groups.length === 0
+                ? `<p style="color:var(--text-secondary);font-size:0.82rem;text-align:center;padding:0.5rem 0;">
+                        <i class="fas fa-folder-plus" style="margin-right:0.4rem;color:var(--accent-primary);"></i>Créez un groupe via le panneau gauche ou <i class="fas fa-folder-plus"></i>
+                   </p>`
+                : `<div style="display:flex;flex-direction:column;gap:0.6rem;">
+                    ${groups.map(grp => {
+                        const grpChecked = grp.items.filter(i=>i.checked).length;
+                        const grpTotal   = grp.items.length;
+                        return `<div style="background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border);overflow:hidden;">
+                            <div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:rgba(99,102,241,0.07);border-bottom:1px solid var(--border);">
+                                <i class="fas fa-folder" style="color:var(--accent-secondary);font-size:0.8rem;flex-shrink:0;"></i>
+                                <span style="font-size:0.82rem;font-weight:700;flex:1;font-family:'Space Grotesk',sans-serif;letter-spacing:0.3px;">${grp.name}</span>
+                                <span style="font-size:0.68rem;color:var(--text-secondary);background:var(--bg-secondary);padding:0.1rem 0.45rem;border-radius:10px;">${grpChecked}/${grpTotal}</span>
+                                <button onclick="renameGroup('${mus.id}','${grp.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.6rem;color:var(--accent-primary);opacity:0.7;" title="Renommer"><i class="fas fa-pen"></i></button>
+                                <button onclick="deleteGroup('${mus.id}','${grp.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.6rem;color:var(--danger);opacity:0.7;" title="Supprimer groupe"><i class="fas fa-folder-minus"></i></button>
+                            </div>
+                            <div style="padding:0.4rem 0.6rem;">
+                                ${grp.items.length === 0
+                                    ? `<p style="color:var(--text-secondary);font-size:0.78rem;padding:0.3rem 0.15rem;"><i class="fas fa-arrow-left" style="margin-right:0.35rem;opacity:0.5;"></i>Ajoutez des éléments via la bibliothèque</p>`
+                                    : grp.items.map(item => `
+                                        <label style="display:flex;align-items:center;gap:0.45rem;padding:0.28rem 0.15rem;cursor:pointer;border-radius:4px;transition:background 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
+                                            <input type="checkbox" ${item.checked?'checked':''} onchange="toggleGroupItem('${mus.id}','${grp.id}','${item.id}',this.checked)" style="accent-color:var(--accent-primary);width:14px;height:14px;flex-shrink:0;">
+                                            <span style="flex:1;font-size:0.82rem;${item.checked?'text-decoration:line-through;opacity:0.4;':''}">${item.name}</span>
+                                            <button onclick="deleteGroupItem('${mus.id}','${grp.id}','${item.id}')" class="btn-icon" style="width:18px;height:18px;font-size:0.55rem;color:var(--danger);opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="fas fa-times"></i></button>
+                                        </label>`).join('')}
+                                <div style="display:flex;gap:0.35rem;margin-top:0.35rem;padding-top:0.35rem;border-top:1px solid rgba(255,255,255,0.04);">
+                                    <input type="text" placeholder="Ajouter un élément libre…" id="quickadd-${mus.id}-${grp.id}"
+                                        onkeydown="if(event.key==='Enter')quickAddItem('${mus.id}','${grp.id}')"
+                                        style="flex:1;padding:0.3rem 0.5rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:5px;color:var(--text-primary);font-size:0.78rem;font-family:inherit;">
+                                    <button onclick="quickAddItem('${mus.id}','${grp.id}')" class="btn-icon" style="width:26px;height:26px;background:var(--accent-gradient);color:white;border-radius:5px;flex-shrink:0;font-size:0.7rem;"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                   </div>`}
+        </div>`;
+    }).join('');
+}
+
+// ── Item & group actions ────────────────────────────────────
+
+async function toggleGroupItem(musId, grpId, itemId, checked) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    const item = grp.items.find(i=>i.id===itemId);
+    if (item) item.checked = checked;
+    await persist(); renderChecklist();
+}
+
+async function deleteGroupItem(musId, grpId, itemId) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    grp.items = grp.items.filter(i=>i.id!==itemId);
+    await persist(); renderChecklist();
+}
+
+async function quickAddItem(musId, grpId) {
+    const input = document.getElementById(`quickadd-${musId}-${grpId}`);
+    const name = (input?.value||''). trim();
+    if (!name) return;
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    if (grp.items.some(i=>i.name===name)) { showToast('Déjà dans ce groupe', true); return; }
+    grp.items.push({ id:'item_'+Date.now(), name, checked:false });
+    await persist(); renderChecklist();
+    showToast(name + ' ajouté ✓');
+}
+
+async function addGroupInline(musId) {
+    const name = prompt('Nom du groupe (ex: SAC_ZILDJIAN, PÉDALIER…)');
+    if (!name || !name.trim()) return;
+    await createGroupForMusician(musId, name.trim());
+}
+
+async function renameGroup(musId, grpId) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    const name = prompt('Nouveau nom du groupe', grp.name);
+    if (!name || !name.trim()) return;
+    grp.name = name.trim();
+    await persist(); renderChecklist(); showToast('Groupe renommé ✓');
+}
+
+async function deleteGroup(musId, grpId) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    if (!confirm(`Supprimer le groupe "${grp.name}" et ses ${grp.items.length} élément(s) ?`)) return;
+    mus.groups = mus.groups.filter(g=>g.id!==grpId);
+    await persist(); renderChecklist(); showToast('Groupe supprimé');
+}
+
+async function resetChecklistMusician(musId) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus || !mus.groups) return;
+    mus.groups.forEach(g=>g.items.forEach(i=>i.checked=false));
+    await persist(); renderChecklist(); showToast('Checklist réinitialisée');
+}
+
+function countChecked(mus) { return (mus.groups||[]).reduce((a,g)=>a+g.items.filter(i=>i.checked).length,0); }
+function countTotal(mus)   { return (mus.groups||[]).reduce((a,g)=>a+g.items.length,0); }
+
+function initGearForMusician(mus) { mus.groups = []; }
+
+// ── Musician modal ──────────────────────────────────────────
+
+function renderChecklistMusiciansModal() {
+    const list = (data.checklistMusicians||[]).map(m=>`
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;margin-bottom:0.5rem;">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:white;flex-shrink:0;">${m.name.charAt(0).toUpperCase()}</div>
+            <span style="flex:1;font-weight:500;">${m.name}</span>
+            <span style="font-size:0.75rem;color:var(--text-secondary);">${(m.groups||[]).length} groupe(s) · ${countTotal(m)} élément(s)</span>
+            <button class="btn-icon" onclick="deleteChecklistMusician('${m.id}')" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+        </div>`).join('') || '<p style="color:var(--text-secondary);text-align:center;padding:1rem;">Aucun musicien ajouté</p>';
+    return `<div style="margin-bottom:1.5rem;">${list}</div>
+        <div style="display:flex;gap:0.75rem;">
+            <input id="new-checklist-musician" type="text" placeholder="Prénom ou pseudo…"
+                onkeydown="if(event.key==='Enter')addChecklistMusician()"
+                style="flex:1;padding:0.75rem 1rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.95rem;font-family:inherit;">
+            <button class="btn-primary" onclick="addChecklistMusician()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Ajouter</button>
+        </div>`;
+}
+
+async function addChecklistMusician() {
+    const input = document.getElementById('new-checklist-musician');
+    const name = (input?.value||''). trim();
+    if (!name) return;
+    if (!data.checklistMusicians) data.checklistMusicians = [];
+    data.checklistMusicians.push({ id:'cm_'+Date.now(), name, groups:[] });
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderChecklistMusiciansModal();
+    renderChecklist();
+    showToast(name + ' ajouté ✓');
+}
+
+async function deleteChecklistMusician(id) {
+    if (!confirm('Supprimer ce musicien et toute sa checklist ?')) return;
+    data.checklistMusicians = (data.checklistMusicians||[]).filter(m=>m.id!==id);
+    await persist();
+    const mb = document.getElementById('modal-body');
+    if (mb && document.getElementById('modal').classList.contains('active')) mb.innerHTML = renderChecklistMusiciansModal();
+    renderChecklist();
+    showToast('Musicien supprimé');
+}
+
+// ── Gear library modal ──────────────────────────────────────
+
+function renderGearLibraryModal() {
+    const lib = getGearLibrary();
+    const cats = {};
+    lib.forEach(item=>{ if(!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
+    return `
+        <div id="gear-lib-list">
+            ${Object.entries(cats).map(([cat, items])=>`
+            <div style="margin-bottom:1rem;">
+                <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;">${cat}</div>
+                ${items.map(item=>`
+                <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;background:var(--bg-tertiary);border-radius:6px;margin-bottom:0.25rem;font-size:0.85rem;">
+                    <span style="flex:1;">${item.name}</span>
+                    <button onclick="deleteGearLibItem('${item.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.65rem;color:var(--danger);"><i class="fas fa-trash"></i></button>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem;">
+            <div style="font-size:0.8rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-secondary);">Ajouter un article</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <input id="new-gear-lib-name" placeholder="Nom du matériel…" style="flex:1;min-width:140px;padding:0.6rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                <input id="new-gear-lib-cat" placeholder="Catégorie (ex: 🎸 Instruments)" style="flex:1;min-width:140px;padding:0.6rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                <button class="btn-primary" onclick="addGearLibItem()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Ajouter</button>
+            </div>
+        </div>`;
+}
+
+async function addGearLibItem() {
+    const name = document.getElementById('new-gear-lib-name')?.value.trim();
+    const cat  = document.getElementById('new-gear-lib-cat')?.value.trim() || '🎒 Divers';
+    if (!name) return;
+    if (!data.gearLibrary || !data.gearLibrary.length) data.gearLibrary = [...GEAR_LIBRARY_DEFAULTS];
+    data.gearLibrary.push({id:'gl_'+Date.now(), cat, name});
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderGearLibraryModal();
+    renderGearLibraryPanel();
+    showToast(name + ' ajouté à la bibliothèque ✓');
+}
+
+async function deleteGearLibItem(id) {
+    if (!data.gearLibrary || !data.gearLibrary.length) data.gearLibrary = [...GEAR_LIBRARY_DEFAULTS];
+    data.gearLibrary = data.gearLibrary.filter(g=>g.id!==id);
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderGearLibraryModal();
+    renderGearLibraryPanel();
+    showToast('Élément supprimé de la bibliothèque');
+}
+
+
+function exportChecklistPDF() {
+    if (!data.checklistMusicians || !data.checklistMusicians.length) { showToast('Aucun musicien dans la checklist', true); return; }
+    const win = window.open('', '_blank');
+    const date = new Date().toLocaleDateString('fr-FR');
+    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Checklist Concert — Silent Oak</title>
+    <style>
+        body{font-family:Arial,sans-serif;color:#111;padding:2cm;font-size:11pt;}
+        h1{font-size:18pt;border-bottom:2px solid #333;padding-bottom:8px;margin-bottom:20px;}
+        h2{font-size:13pt;background:#f0f0f0;padding:6px 10px;border-left:4px solid #6366f1;margin:20px 0 10px;}
+        .musician{page-break-inside:avoid;margin-bottom:30px;}
+        .stats{font-size:9pt;color:#555;margin-bottom:10px;}
+        .groups{display:flex;flex-wrap:wrap;gap:16px;}
+        .group-block{flex:1;min-width:200px;background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:8px 12px;margin-bottom:10px;}
+        .group-title{font-size:9pt;font-weight:bold;letter-spacing:0.5px;margin-bottom:6px;color:#333;border-bottom:1px solid #e0e0e0;padding-bottom:4px;}
+        .item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:10pt;}
+        .box{width:14px;height:14px;border:1.5px solid #999;border-radius:3px;flex-shrink:0;}
+        .checked .box{background:#6366f1;border-color:#6366f1;}
+        .checked span{text-decoration:line-through;opacity:0.5;}
+        .footer{margin-top:30px;font-size:8pt;color:#aaa;text-align:center;border-top:1px solid #ddd;padding-top:8px;}
+        @media print{.noprint{display:none;}}
+    </style></head><body>
+    <h1>🎸 Checklist Concert — Silent Oak</h1>
+    <p style="color:#555;font-size:9pt;margin-bottom:24px;">Exporté le ${date}</p>`;
+
+    data.checklistMusicians.forEach(mus => {
+        const groups = mus.groups || [];
+        const total   = countTotal(mus);
+        const checked = countChecked(mus);
+        html += `<div class="musician"><h2>${mus.name}</h2>
+        <div class="stats">${checked}/${total} éléments cochés — ${groups.length} groupe(s)</div>
+        <div class="groups">`;
+        groups.forEach(grp => {
+            if (!grp.items.length) return;
+            html += `<div class="group-block"><div class="group-title">📁 ${grp.name}</div>`;
+            grp.items.forEach(item => {
+                html += `<div class="item ${item.checked?'checked':''}"><div class="box"></div><span>${item.name}</span></div>`;
+            });
+            html += `</div>`;
+        });
+        if (!groups.length) html += `<p style="color:#999;font-size:9pt;">Aucun groupe défini</p>`;
+        html += `</div></div>`;
+    });
+    html += `<div class="footer">Silent Oak — Management Hub</div></body></html>`;
+    win.document.write(html);
+    win.document.close();
+    setTimeout(()=>win.print(), 500);
+}
+
+// ── Tricount logic ──
+let transactionFilter = 'all';
+
+function getMemberName(id) {
+    const m = data.members.find(x=>x.id===id);
+    return m ? m.name : '?';
+}
+
+function getMemberColor(id) {
+    const colors = ['#6366f1','#8b5cf6','#ec4899','#f59e0b','#10b981','#3b82f6','#ef4444','#14b8a6'];
+    const idx = data.members.findIndex(x=>x.id===id);
+    return colors[idx % colors.length] || '#6366f1';
+}
+
+function computeBalances() {
+    // balances[memberId] = net amount (positive = others owe them, negative = they owe others)
+    // Only expense transactions create debt; income transactions are gains split equally
+    const balances = {};
+    data.members.forEach(m => balances[m.id] = 0);
+    data.transactions.forEach(t => {
+        if (!t.paidBy || !t.splitBetween || !t.splitBetween.length) return;
+        const amount = parseFloat(t.amount) || 0;
+        const share  = amount / t.splitBetween.length;
+        if (t.type === 'expense') {
+            // payer advanced the full amount → others owe them
+            if (balances[t.paidBy] !== undefined) balances[t.paidBy] += amount;
+            t.splitBetween.forEach(mid => {
+                if (balances[mid] !== undefined) balances[mid] -= share;
+            });
+        } else {
+            // income: person who received it (paidBy) holds it, distribute equally
+            if (balances[t.paidBy] !== undefined) balances[t.paidBy] -= (amount - share); // they keep their share, owe the rest
+            t.splitBetween.filter(mid=>mid!==t.paidBy).forEach(mid => {
+                if (balances[mid] !== undefined) balances[mid] += share;
+            });
+        }
+    });
+    return balances;
+}
+
+function computeSettlements(balances) {
+    // Greedy algorithm: find who owes most and who is owed most, pair them
+    const creditors = [], debtors = [];
+    Object.entries(balances).forEach(([id, bal]) => {
+        if (bal > 0.01)       creditors.push({id, amount: bal});
+        else if (bal < -0.01) debtors.push({id, amount: -bal});
+    });
+    creditors.sort((a,b)=>b.amount-a.amount);
+    debtors.sort((a,b)=>b.amount-a.amount);
+
+    const settlements = [];
+    let ci=0, di=0;
+    while (ci<creditors.length && di<debtors.length) {
+        const c=creditors[ci], d=debtors[di];
+        const amount = Math.min(c.amount, d.amount);
+        if (amount > 0.01) settlements.push({ from: d.id, to: c.id, amount });
+        c.amount -= amount;
+        d.amount -= amount;
+        if (c.amount < 0.01) ci++;
+        if (d.amount < 0.01) di++;
+    }
+    return settlements;
+}
+
+function renderMembersModal() {
+    const list = data.members.map(m => `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;margin-bottom:0.5rem;">
+            <div style="width:36px;height:36px;border-radius:50%;background:${getMemberColor(m.id)};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:white;flex-shrink:0;">
+                ${m.name.charAt(0).toUpperCase()}
+            </div>
+            <span style="flex:1;font-weight:500;">${m.name}</span>
+            <button class="btn-icon" onclick="deleteMember('${m.id}')" style="color:var(--danger);"><i class="fas fa-trash"></i></button>
+        </div>`).join('') || '<p style="color:var(--text-secondary);text-align:center;padding:1rem;">Aucun membre ajouté</p>';
+
+    return `
+        <div style="margin-bottom:1.5rem;">${list}</div>
+        <div style="display:flex;gap:0.75rem;">
+            <input id="new-member-input" type="text" placeholder="Prénom ou pseudo..." style="flex:1;padding:0.75rem 1rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.95rem;font-family:inherit;">
+            <button class="btn-primary" onclick="addMemberFromModal()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Ajouter</button>
+        </div>
+        <p style="color:var(--text-secondary);font-size:0.8rem;margin-top:0.75rem;"><i class="fas fa-info-circle"></i> Les membres sont permanents et liés aux transactions.</p>`;
+}
+
+async function addMemberFromModal() {
+    const input = document.getElementById('new-member-input');
+    const name  = (input?.value || '').trim();
+    if (!name) return;
+    data.members.push({ id: Date.now().toString(), name });
+    await persist();
+    // Refresh modal content
+    document.getElementById('modal-body').innerHTML = renderMembersModal();
+    renderTransactions();
+    showToast(name + ' ajouté ✓');
+}
+
+async function deleteMember(id) {
+    if (!confirm('Supprimer ce membre ? Les transactions liées seront conservées.')) return;
+    data.members = data.members.filter(m=>m.id!==id);
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderMembersModal();
+    renderTransactions();
+    showToast('Membre supprimé');
+}
+
+function filterTransactions(filter, btn) {
+    transactionFilter = filter;
+    document.querySelectorAll('#member-filter-bar .category-btn').forEach(b=>b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderTransactionList();
+}
+
+function renderTransactions() {
+    const c=document.getElementById('transaction-list');
+    let inc=0,exp=0;
+    data.transactions.forEach(t=>t.type==='income'?inc+= +t.amount:exp+= +t.amount);
+    document.getElementById('total-income').textContent=inc.toFixed(2)+'€';
+    document.getElementById('total-expense').textContent=exp.toFixed(2)+'€';
+    const bal=inc-exp;
+    const el=document.getElementById('total-balance');
+    el.textContent=bal.toFixed(2)+'€';
+    el.style.cssText=`-webkit-text-fill-color:${bal>=0?'var(--success)':'var(--danger)'}`;
+
+    // Show/hide Tricount section
+    const hasMembers = data.members.length > 0;
+    document.getElementById('tricount-section').style.display = hasMembers ? '' : 'none';
+    document.getElementById('member-filter-bar').style.display = hasMembers ? '' : 'none';
+
+    if (hasMembers) {
+        // Render member balance cards
+        const balances = computeBalances();
+        document.getElementById('members-balances').innerHTML = data.members.map(m => {
+            const bal = balances[m.id] || 0;
+            const color = bal > 0.01 ? 'var(--success)' : bal < -0.01 ? 'var(--danger)' : 'var(--text-secondary)';
+            const icon  = bal > 0.01 ? 'fa-arrow-up' : bal < -0.01 ? 'fa-arrow-down' : 'fa-minus';
+            return `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:0.75rem;">
+                <div style="width:42px;height:42px;border-radius:50%;background:${getMemberColor(m.id)};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:1rem;flex-shrink:0;">${m.name.charAt(0).toUpperCase()}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.name}</div>
+                    <div style="font-size:1.1rem;font-weight:700;color:${color};display:flex;align-items:center;gap:0.3rem;">
+                        <i class="fas ${icon}" style="font-size:0.8rem;"></i>
+                        ${Math.abs(bal).toFixed(2)}€
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--text-secondary);">${bal > 0.01 ? 'est remboursé' : bal < -0.01 ? 'doit rembourser' : 'équilibré'}</div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Render settlements
+        const settlements = computeSettlements(balances);
+        document.getElementById('settlements').innerHTML = settlements.length
+            ? settlements.map(s => `
+                <div style="display:flex;align-items:center;gap:0.75rem;padding:0.875rem 1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;margin-bottom:0.5rem;">
+                    <div style="width:32px;height:32px;border-radius:50%;background:${getMemberColor(s.from)};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:0.85rem;">${getMemberName(s.from).charAt(0).toUpperCase()}</div>
+                    <span style="color:var(--text-secondary);font-size:0.9rem;">doit</span>
+                    <span style="font-weight:700;font-size:1rem;color:var(--danger);">${s.amount.toFixed(2)}€</span>
+                    <span style="color:var(--text-secondary);font-size:0.9rem;">à</span>
+                    <div style="width:32px;height:32px;border-radius:50%;background:${getMemberColor(s.to)};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:0.85rem;">${getMemberName(s.to).charAt(0).toUpperCase()}</div>
+                    <span style="font-weight:600;">${getMemberName(s.to)}</span>
+                </div>`).join('')
+            : '<p style="color:var(--text-secondary);font-size:0.9rem;padding:0.5rem 0;"><i class="fas fa-check-circle" style="color:var(--success);margin-right:0.5rem;"></i>Tout le monde est à l\'équilibre !</p>';
+
+        // Render member filter buttons
+        document.getElementById('member-filter-btns').innerHTML = data.members.map(m =>
+            `<button class="category-btn" onclick="filterTransactions('${m.id}',this)" style="border-color:${getMemberColor(m.id)}20;">${m.name}</button>`
+        ).join('');
+    }
+
+    renderTransactionList();
+}
+
+function renderTransactionList() {
+    const c = document.getElementById('transaction-list');
+    let txns = [...data.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+    if (transactionFilter !== 'all') {
+        txns = txns.filter(t => t.paidBy === transactionFilter || (t.splitBetween||[]).includes(transactionFilter));
+    }
+
+    if (!txns.length) { c.innerHTML = emptyState('Aucune transaction','Suivez vos recettes et dépenses'); return; }
+
+    c.innerHTML = txns.map(i => {
+        const paidByName = i.paidBy ? getMemberName(i.paidBy) : null;
+        const paidByColor = i.paidBy ? getMemberColor(i.paidBy) : null;
+        const splitNames = (i.splitBetween||[]).map(id=>getMemberName(id));
+        const shareAmt = i.splitBetween?.length ? (parseFloat(i.amount||0)/i.splitBetween.length).toFixed(2) : null;
+
+        return `<div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:${i.type==='income'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'};color:${i.type==='income'?'var(--success)':'var(--danger)'}">
+                <i class="fas fa-arrow-${i.type==='income'?'up':'down'}"></i>
+            </div>
+            ${aBtns('transactions',i.id,'add-transaction')}
+        </div>
+        <h3>${i.description}</h3>
+        <div style="font-size:1.5rem;font-weight:700;margin:0.4rem 0;color:${i.type==='income'?'var(--success)':'var(--danger)'}">
+            ${i.type==='income'?'+':'-'}${parseFloat(i.amount||0).toFixed(2)}€
+        </div>
+        ${paidByName ? `<div style="display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0;font-size:0.9rem;">
+            <div style="width:24px;height:24px;border-radius:50%;background:${paidByColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:white;">${paidByName.charAt(0).toUpperCase()}</div>
+            <span style="color:var(--text-secondary);">Payé par</span>
+            <span style="font-weight:600;">${paidByName}</span>
+            ${shareAmt ? `<span style="color:var(--text-secondary);font-size:0.8rem;">(${shareAmt}€/pers.)</span>` : ''}
+        </div>` : ''}
+        ${splitNames.length > 0 ? `<div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.5rem;">
+            <i class="fas fa-users" style="margin-right:0.35rem;"></i>${splitNames.join(', ')}
+        </div>` : ''}
+        <div class="card-meta">
+            <span><i class="fas fa-calendar"></i> ${i.date?new Date(i.date).toLocaleDateString('fr-FR'):'—'}</span>
+            <span class="tag">${i.category}</span>
+        </div>
+    </div>`;
+    }).join('');
+}
+
+async function deleteItem(key, id) {
+    if (!confirm('Supprimer cet élément ?')) return;
+    data[key] = data[key].filter(x=>x.id!==id);
+    await persist(); updateUI(); showToast('Élément supprimé');
+}
+
+function showToast(msg, err=false) {
+    const t=document.getElementById('toast');
+    document.getElementById('toast-message').textContent=msg;
+    t.className='toast show'+(err?' error':'');
+    setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+
+
+// ══════════════════════════════════════
+//  MOBILE HELPERS
+// ══════════════════════════════════════
+
+function isMobile() { return window.innerWidth <= 768; }
+
+function closeSidebarMobile() {
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebar-overlay');
+    if (s) s.classList.remove('open');
+    if (o) o.classList.remove('visible');
+}
+
+function toggleSidebar() {
+    const sidebar  = document.getElementById('sidebar');
+    const overlay  = document.getElementById('sidebar-overlay');
+    const isOpen   = sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible', isOpen);
+}
+
+// switchTabMobile: used by bottom nav buttons only
+function switchTabMobile(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    const sidebarBtn = [...document.querySelectorAll('.nav-link')].find(b => b.getAttribute('onclick')?.includes("'" + name + "'"));
+    if (sidebarBtn) sidebarBtn.classList.add('active');
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    if (name === 'agenda') renderCalendar();
+    if (name === 'checklist') renderChecklist();
+    if (name === 'setlist') renderSavedSetlists();
+    closeSidebarMobile();
+}
+
+// Patch switchTab to also sync bottom nav + close sidebar
+const _switchTabCore = switchTab;
+switchTab = function(name, btn) {
+    _switchTabCore(name, btn);
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => {
+        b.classList.toggle('active', !!b.getAttribute('onclick')?.includes("'" + name + "'"));
+    });
+    closeSidebarMobile();
+};
+
+// Patch switchTabByName to also sync bottom nav
+const _switchTabByNameCore = switchTabByName;
+switchTabByName = function(name) {
+    _switchTabByNameCore(name);
+    document.querySelectorAll('.bottom-nav-btn').forEach(b => {
+        b.classList.toggle('active', !!b.getAttribute('onclick')?.includes("'" + name + "'"));
+    });
+};
+
+// Patch updateBadges to sync bottom nav badges
+const _updateBadgesCore = updateBadges;
+updateBadges = function() {
+    _updateBadgesCore();
+    const pb  = data.purchases.length;
+    const tb  = data.tasks.filter(t=>!t.completed).length;
+    const bpb = document.getElementById('bnav-purchase-badge');
+    const btb = document.getElementById('bnav-task-badge');
+    if (bpb) { bpb.textContent = pb;  bpb.style.display = pb > 0 ? '' : 'none'; }
+    if (btb) { btb.textContent = tb;  btb.style.display = tb > 0 ? '' : 'none'; }
+};
+
+// Close modal on Android back gesture
+window.addEventListener('popstate', () => {
+    const modal = document.getElementById('modal');
+    if (modal && modal.classList.contains('active')) { closeModal(); history.pushState(null, ''); }
+});
+
+// ── BOOT ──
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+
+</body>
+</html>
