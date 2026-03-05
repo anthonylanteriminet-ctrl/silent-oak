@@ -1192,7 +1192,7 @@
 // ═══════════════════════════════════════════════════════════
 //  APPS SCRIPT CONFIG
 // ═══════════════════════════════════════════════════════════
-const SCRIPT_URL      = 'https://script.google.com/macros/s/AKfycbzygSXlUuFpC33e9CV-W0Tu1POtn0qtlH9WZa7pgOGWOy6-t1buZ3KV3WtsGGIOwCk/exec';
+const SCRIPT_URL      = 'https://silent-oak-proxy.antoniolant.workers.dev';
 const SESSION_TTL_MS  = 5 * 60 * 1000;   // 5 min
 const INACTIVITY_WARN = 4 * 60 * 1000;   // warning à 4 min
 const HEARTBEAT_MS    = 60 * 1000;        // heartbeat toutes les 60s
@@ -1424,31 +1424,26 @@ async function autoDisconnect() {
 // ═══════════════════════════════════════════════════════════
 //  APPS SCRIPT FETCH
 // ═══════════════════════════════════════════════════════════
-// ── fetch helper ──
+// ── fetch helper (via Cloudflare proxy) ──
 async function apsFetch(action, body) {
-    // Save uses POST (data too large for URL), others use GET
     if (action === 'save') {
-        // POST with no-cors — Apps Script accepts it via doPost
-        // We can't read the response with no-cors, so we do a GET ping after to verify
-        const payload = JSON.stringify({ action, user: body.user, data: body.data });
-        await fetch(SCRIPT_URL, {
+        // POST for save (large payload)
+        const res = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: payload,
-            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, user: body.user, data: body.data }),
         });
-        // Assume success if no exception thrown
-        return { ok: true, saved: true };
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
     }
-
-    // All other actions via GET (CORS-safe)
+    // GET for all other actions
     const params = new URLSearchParams({ action });
     if (body) {
         Object.entries(body).forEach(([k, v]) => {
             if (v !== undefined && v !== null) params.set(k, String(v));
         });
     }
-    const url = SCRIPT_URL + '?' + params.toString();
-    const res = await fetch(url, { redirect: 'follow', mode: 'cors' });
+    const res = await fetch(SCRIPT_URL + '?' + params.toString());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
 }
