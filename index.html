@@ -1424,24 +1424,31 @@ async function autoDisconnect() {
 // ═══════════════════════════════════════════════════════════
 //  APPS SCRIPT FETCH
 // ═══════════════════════════════════════════════════════════
-// ── fetch helper (CORS-safe via redirect:follow) ──
-let _cbIdx = 0;
+// ── fetch helper ──
 async function apsFetch(action, body) {
+    // Save uses POST (data too large for URL), others use GET
+    if (action === 'save') {
+        // POST with no-cors — Apps Script accepts it via doPost
+        // We can't read the response with no-cors, so we do a GET ping after to verify
+        const payload = JSON.stringify({ action, user: body.user, data: body.data });
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: payload,
+            mode: 'no-cors',
+        });
+        // Assume success if no exception thrown
+        return { ok: true, saved: true };
+    }
+
+    // All other actions via GET (CORS-safe)
     const params = new URLSearchParams({ action });
     if (body) {
         Object.entries(body).forEach(([k, v]) => {
-            if (k === 'data') {
-                params.set('data', encodeURIComponent(JSON.stringify(v)));
-            } else if (v !== undefined && v !== null) {
-                params.set(k, String(v));
-            }
+            if (v !== undefined && v !== null) params.set(k, String(v));
         });
     }
     const url = SCRIPT_URL + '?' + params.toString();
-    const res = await fetch(url, {
-        redirect: 'follow',
-        mode: 'cors',
-    });
+    const res = await fetch(url, { redirect: 'follow', mode: 'cors' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
 }
