@@ -773,7 +773,6 @@
             <li><button class="nav-link" onclick="switchTab('checklist', this)"><i class="fas fa-clipboard-check"></i><span>Checklist Concert</span></button></li>
             <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
             <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
-            <li id="nav-admin-item" style="display:none;"><button class="nav-link" onclick="switchTab('admin', this)"><i class="fas fa-shield-halved"></i><span>Administration</span></button></li>
         </ul>
 
                 <div class="sidebar-footer">
@@ -1305,9 +1304,8 @@ async function initApp() {
                 const res = await apsFetch('renew', {});
                 if (res.ok) {
                     sessionUser    = s.displayName;
-                    sessionRole    = res.role || s.role;
+                    sessionRole    = s.role;
                     sessionExpires = res.expires;
-                    await loadDataFromServer(res.data);
                     showApp(); return;
                 }
             }
@@ -3407,6 +3405,7 @@ function computeBalances() {
     data.members.forEach(m => balances[m.id] = 0);
     data.transactions.forEach(t => {
         if (!t.paidBy || !t.splitBetween || !t.splitBetween.length) return;
+        if (t.type === 'expense' && t.reimbursed === true) return; // skip reimbursed expenses
         const amount = parseFloat(t.amount) || 0;
         const share  = amount / t.splitBetween.length;
         if (t.type === 'expense') {
@@ -3571,18 +3570,36 @@ function renderTransactionList() {
         const paidByColor = i.paidBy ? getMemberColor(i.paidBy) : null;
         const splitNames = (i.splitBetween||[]).map(id=>getMemberName(id));
         const shareAmt = i.splitBetween?.length ? (parseFloat(i.amount||0)/i.splitBetween.length).toFixed(2) : null;
+        const isExpense = i.type === 'expense';
+        const isReimbursed = isExpense && i.reimbursed === true;
 
-        return `<div class="card">
+        const cardOpacity = isReimbursed ? 'opacity:0.55;' : '';
+        const amountStyle = isReimbursed
+            ? 'text-decoration:line-through;color:var(--text-secondary);'
+            : `color:${i.type==='income'?'var(--success)':'var(--danger)'}`;
+
+        const reimbursedBtn = isExpense ? `
+        <button onclick="toggleReimbursed('${i.id}')" title="${isReimbursed?'Marquer comme non remboursé':'Marquer comme remboursé'}"
+            style="margin-top:0.75rem;width:100%;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid ${isReimbursed?'var(--success)':'var(--border)'};
+            background:${isReimbursed?'rgba(16,185,129,0.15)':'transparent'};
+            color:${isReimbursed?'var(--success)':'var(--text-secondary)'};
+            cursor:pointer;font-size:0.8rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:0.4rem;transition:all 0.2s;">
+            <i class="fas fa-${isReimbursed?'check-circle':'circle'}"></i>
+            ${isReimbursed?'Remboursé ✓':'Marquer comme remboursé'}
+        </button>` : '';
+
+        return `<div class="card" style="${cardOpacity}">
         <div class="card-header">
-            <div class="card-icon" style="background:${i.type==='income'?'rgba(16,185,129,0.2)':'rgba(239,68,68,0.2)'};color:${i.type==='income'?'var(--success)':'var(--danger)'}">
+            <div class="card-icon" style="background:${i.type==='income'?'rgba(16,185,129,0.2)':isReimbursed?'rgba(100,100,100,0.2)':'rgba(239,68,68,0.2)'};color:${i.type==='income'?'var(--success)':isReimbursed?'var(--text-secondary)':'var(--danger)'}">
                 <i class="fas fa-arrow-${i.type==='income'?'up':'down'}"></i>
             </div>
             ${aBtns('transactions',i.id,'add-transaction')}
         </div>
-        <h3>${i.description}</h3>
-        <div style="font-size:1.5rem;font-weight:700;margin:0.4rem 0;color:${i.type==='income'?'var(--success)':'var(--danger)'}">
+        <h3 style="${isReimbursed?'color:var(--text-secondary);':''}">${i.description}</h3>
+        <div style="font-size:1.5rem;font-weight:700;margin:0.4rem 0;${amountStyle}">
             ${i.type==='income'?'+':'-'}${parseFloat(i.amount||0).toFixed(2)}€
         </div>
+        ${isReimbursed ? `<div style="font-size:0.75rem;color:var(--success);font-weight:600;margin-bottom:0.25rem;"><i class="fas fa-check-circle" style="margin-right:0.3rem;"></i>Remboursé${i.reimbursedAt?' le '+new Date(i.reimbursedAt).toLocaleDateString('fr-FR'):''}</div>` : ''}
         ${paidByName ? `<div style="display:flex;align-items:center;gap:0.5rem;margin:0.5rem 0;font-size:0.9rem;">
             <div style="width:24px;height:24px;border-radius:50%;background:${paidByColor};display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:white;">${paidByName.charAt(0).toUpperCase()}</div>
             <span style="color:var(--text-secondary);">Payé par</span>
@@ -3596,8 +3613,19 @@ function renderTransactionList() {
             <span><i class="fas fa-calendar"></i> ${i.date?new Date(i.date).toLocaleDateString('fr-FR'):'—'}</span>
             <span class="tag">${i.category}</span>
         </div>
+        ${reimbursedBtn}
     </div>`;
     }).join('');
+}
+
+async function toggleReimbursed(id) {
+    const t = data.transactions.find(x => x.id === id);
+    if (!t || t.type !== 'expense') return;
+    t.reimbursed = !t.reimbursed;
+    t.reimbursedAt = t.reimbursed ? new Date().toISOString() : null;
+    await persist();
+    renderTransactions();
+    showToast(t.reimbursed ? 'Dépense marquée comme remboursée ✓' : 'Remboursement annulé');
 }
 
 async function deleteItem(key, id) {
