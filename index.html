@@ -688,14 +688,17 @@
             <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.75rem;margin-bottom:0.5rem;color:#f8fafc;">Silent Oak</h2>
             <p style="color:#94a3b8;font-size:0.85rem;margin-bottom:2rem;">Hub de gestion du groupe</p>
 
-            <!-- State: enter name -->
+            <!-- State: enter credentials -->
             <div id="ss-enter">
-                <p style="color:#94a3b8;margin-bottom:1.25rem;font-size:0.95rem;">Entrez votre prénom pour commencer</p>
-                <input id="ss-name" type="text" placeholder="Votre prénom…" maxlength="30"
+                <p style="color:#94a3b8;margin-bottom:1.25rem;font-size:0.95rem;">Connectez-vous pour accéder à Silent Oak</p>
+                <input id="ss-username" type="text" placeholder="Identifiant" maxlength="30" autocomplete="username"
+                    onkeydown="if(event.key==='Enter')document.getElementById('ss-password').focus()"
+                    style="width:100%;padding:0.9rem 1rem;background:#1a1a25;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#f8fafc;font-size:1rem;font-family:inherit;margin-bottom:0.75rem;text-align:center;">
+                <input id="ss-password" type="password" placeholder="Mot de passe" maxlength="100" autocomplete="current-password"
                     onkeydown="if(event.key==='Enter')ssConnect()"
                     style="width:100%;padding:0.9rem 1rem;background:#1a1a25;border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#f8fafc;font-size:1rem;font-family:inherit;margin-bottom:1rem;text-align:center;">
                 <button onclick="ssConnect()" style="width:100%;padding:1rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;">
-                    <i class="fas fa-play"></i> Entrer
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
                 </button>
             </div>
 
@@ -1161,6 +1164,32 @@
             </div>
             <div class="cards-grid" id="transaction-list"></div>
         </div>
+        <!-- Admin -->
+        <div id="admin" class="tab-content">
+            <div class="header">
+                <h2>Administration</h2>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+                <!-- Users list -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.25rem;font-family:'Space Grotesk',sans-serif;"><i class="fas fa-users" style="color:var(--accent-primary);margin-right:0.5rem;"></i>Utilisateurs</h3>
+                    <div id="admin-users-list"></div>
+                    <button class="btn-primary" onclick="openAdminCreateUser()" style="margin-top:1rem;width:100%;justify-content:center;"><i class="fas fa-user-plus"></i> Créer un utilisateur</button>
+                </div>
+                <!-- My account -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.25rem;font-family:'Space Grotesk',sans-serif;"><i class="fas fa-key" style="color:var(--warning);margin-right:0.5rem;"></i>Mon compte</h3>
+                    <div style="margin-bottom:1rem;padding:0.75rem 1rem;background:var(--bg-tertiary);border-radius:10px;font-size:0.9rem;">
+                        <div style="color:var(--text-secondary);font-size:0.78rem;margin-bottom:0.25rem;">Connecté en tant que</div>
+                        <div style="font-weight:700;" id="admin-my-name">—</div>
+                        <div style="font-size:0.78rem;color:var(--accent-primary);margin-top:0.2rem;" id="admin-my-role">—</div>
+                    </div>
+                    <div class="form-group"><label>Nouveau mot de passe</label><input id="admin-new-pass" type="password" placeholder="Minimum 4 caractères"></div>
+                    <div class="form-group"><label>Confirmer</label><input id="admin-new-pass2" type="password" placeholder="Répéter le mot de passe"></div>
+                    <button class="btn-primary" onclick="adminChangeMyPassword()" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Changer mon mot de passe</button>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -1201,6 +1230,9 @@
             </button>
             <button class="bottom-nav-btn" onclick="switchTabMobile('finance',this)">
                 <i class="fas fa-wallet"></i>Finance
+            </button>
+            <button class="bottom-nav-btn" id="bnav-admin-btn" style="display:none;" onclick="switchTabMobile('admin',this)">
+                <i class="fas fa-shield-alt" style="color:var(--warning);"></i><span style="color:var(--warning);">Admin</span>
             </button>
         </div>
     </nav>
@@ -1250,7 +1282,9 @@ let modalType = '';
 let editId    = null;
 
 // Session
-let sessionUser    = '';
+let sessionUser    = '';   // display name
+let sessionToken   = '';   // auth token
+let sessionRole    = '';   // 'admin' | 'member'
 let sessionExpires = null;
 let heartbeatTimer  = null;
 let inactivityTimer = null;
@@ -1265,12 +1299,13 @@ async function initApp() {
     if (saved) {
         try {
             const s = JSON.parse(saved);
-            if (s.user && Date.now() < new Date(s.expires).getTime()) {
-                sessionUser = s.user;
-                const res   = await apsFetch('acquire', { user: sessionUser });
+            if (s.token && Date.now() < new Date(s.expires).getTime()) {
+                sessionToken = s.token;
+                const res = await apsFetch('renew', {});
                 if (res.ok) {
+                    sessionUser    = s.displayName;
+                    sessionRole    = s.role;
                     sessionExpires = res.expires;
-                    await loadDataFromServer(res.data);
                     showApp(); return;
                 }
             }
@@ -1278,7 +1313,7 @@ async function initApp() {
         sessionStorage.removeItem('soSession');
     }
     document.getElementById('session-screen').style.display = 'flex';
-    setTimeout(() => document.getElementById('ss-name').focus(), 100);
+    setTimeout(() => document.getElementById('ss-username')?.focus(), 100);
 }
 
 // ── Session UI states ──
@@ -1289,14 +1324,17 @@ function ssShow(state) {
 }
 
 async function ssConnect() {
-    const nameEl = document.getElementById('ss-name');
-    const name   = (nameEl?.value || '').trim();
-    if (!name) { nameEl?.focus(); return; }
+    const username = (document.getElementById('ss-username')?.value || '').trim();
+    const password = document.getElementById('ss-password')?.value || '';
+    if (!username) { document.getElementById('ss-username')?.focus(); return; }
+    if (!password) { document.getElementById('ss-password')?.focus(); return; }
     ssShow('loading');
     try {
-        const res = await apsFetch('acquire', { user: name });
+        const res = await apsFetch('login', { username, password });
         if (res.ok) {
-            sessionUser    = name;
+            sessionToken   = res.token;
+            sessionUser    = res.displayName;
+            sessionRole    = res.role;
             sessionExpires = res.expires;
             await loadDataFromServer(res.data);
             document.getElementById('session-screen').style.display = 'none';
@@ -1306,24 +1344,30 @@ async function ssConnect() {
                 '<strong style="color:#f8fafc">' + res.occupiedBy + '</strong> est connecté(e).<br>' +
                 'Déconnexion auto dans <strong>' + Math.ceil(res.remainingSeconds/60) + ' min</strong>.';
             ssShow('occupied');
+        } else if (res.reason === 'invalid_credentials') {
+            document.getElementById('ss-error-msg').textContent = 'Identifiant ou mot de passe incorrect.';
+            ssShow('error');
         } else {
             document.getElementById('ss-error-msg').textContent = 'Erreur : ' + (res.reason || 'inconnue');
             ssShow('error');
         }
     } catch(e) {
-        document.getElementById('ss-error-msg').textContent = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
+        document.getElementById('ss-error-msg').textContent = 'Impossible de contacter le serveur.';
         ssShow('error');
     }
 }
 
 async function ssForceEnter() {
-    const name = (document.getElementById('ss-name')?.value || '').trim();
-    if (!name) { ssShow('enter'); return; }
+    const username = (document.getElementById('ss-username')?.value || '').trim();
+    const password = document.getElementById('ss-password')?.value || '';
+    if (!username || !password) { ssShow('enter'); return; }
     ssShow('loading');
     try {
-        const res = await apsFetch('acquire', { user: name, force: true });
+        const res = await apsFetch('force_login', { username, password });
         if (res.ok) {
-            sessionUser    = name;
+            sessionToken   = res.token;
+            sessionUser    = res.displayName;
+            sessionRole    = res.role;
             sessionExpires = res.expires;
             await loadDataFromServer(res.data);
             document.getElementById('session-screen').style.display = 'none';
@@ -1342,13 +1386,15 @@ function ssCheckAgain() { ssShow('enter'); }
 function ssRetry()      { ssShow('enter'); }
 
 async function ssDisconnect() {
-    if (!sessionUser) return;
+    if (!sessionToken) return;
     if (!confirm('Se déconnecter ?')) return;
     stopHeartbeat(); stopInactivityWatch();
-    try { await apsFetch('release', { user: sessionUser }); } catch(e) {}
-    sessionUser = ''; sessionStorage.removeItem('soSession');
+    try { await apsFetch('release', { token: sessionToken }); } catch(e) {}
+    sessionToken = ''; sessionUser = ''; sessionRole = '';
+    sessionStorage.removeItem('soSession');
     ssShow('enter');
-    document.getElementById('ss-name').value = '';
+    document.getElementById('ss-username').value = '';
+    document.getElementById('ss-password').value = '';
     document.getElementById('session-screen').style.display = 'flex';
 }
 
@@ -1358,10 +1404,15 @@ async function ssDisconnect() {
 function showApp() {
     document.getElementById('session-screen').style.display     = 'none';
     document.getElementById('inactivity-overlay').style.display = 'none';
+    // Show admin nav only for admins
+    const isAdmin = sessionRole === 'admin';
+    document.getElementById('nav-admin-item').style.display     = isAdmin ? '' : 'none';
+    const bnavAdmin = document.getElementById('bnav-admin-btn');
+    if (bnavAdmin) bnavAdmin.style.display = isAdmin ? '' : 'none';
     updateSessionUI();
     updateUI(); renderCalendar();
     startHeartbeat(); startInactivityWatch();
-    sessionStorage.setItem('soSession', JSON.stringify({ user: sessionUser, expires: sessionExpires }));
+    sessionStorage.setItem('soSession', JSON.stringify({ token: sessionToken, displayName: sessionUser, role: sessionRole, expires: sessionExpires }));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1369,7 +1420,12 @@ function showApp() {
 // ═══════════════════════════════════════════════════════════
 function updateSessionUI() {
     const label = document.getElementById('session-user-label');
-    if (label) label.textContent = sessionUser || '—';
+    if (label) label.textContent = (sessionUser || '—') + (sessionRole === 'admin' ? ' ⚙' : '');
+    // Update admin panel info if open
+    const myName = document.getElementById('admin-my-name');
+    const myRole = document.getElementById('admin-my-role');
+    if (myName) myName.textContent = sessionUser || '—';
+    if (myRole) myRole.textContent = sessionRole === 'admin' ? '👑 Administrateur' : '👤 Membre';
     updateTimerBar();
 }
 
@@ -1390,10 +1446,10 @@ function startHeartbeat() {
     heartbeatTimer = setInterval(async () => {
         if (!sessionUser) return;
         try {
-            const res = await apsFetch('renew', { user: sessionUser });
+            const res = await apsFetch('renew', {});
             if (res.ok) {
                 sessionExpires = res.expires;
-                sessionStorage.setItem('soSession', JSON.stringify({ user: sessionUser, expires: sessionExpires }));
+                sessionStorage.setItem('soSession', JSON.stringify({ token: sessionToken, displayName: sessionUser, role: sessionRole, expires: sessionExpires }));
                 updateTimerBar();
             } else {
                 showToast('Session expirée — vous avez été déconnecté(e)', true);
@@ -1451,15 +1507,17 @@ function ssKeepAlive() {
     if (ov) ov.style.display = 'none';
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     lastActivity = Date.now();
-    if (sessionUser) apsFetch('renew', { user: sessionUser }).then(r => { if (r.ok) { sessionExpires=r.expires; updateTimerBar(); } }).catch(()=>{});
+    if (sessionToken) apsFetch('renew', {}).then(r => { if (r.ok) { sessionExpires=r.expires; updateTimerBar(); } }).catch(()=>{});
 }
 async function autoDisconnect() {
     showToast("Déconnecté automatiquement après 5 min d'inactivité", true);
     stopHeartbeat(); stopInactivityWatch();
-    try { if (sessionUser) await apsFetch('release', { user: sessionUser }); } catch(e) {}
-    sessionUser = ''; sessionStorage.removeItem('soSession');
+    try { if (sessionToken) await apsFetch('release', { token: sessionToken }); } catch(e) {}
+    sessionToken = ''; sessionUser = ''; sessionRole = '';
+    sessionStorage.removeItem('soSession');
     ssShow('enter');
-    document.getElementById('ss-name').value = '';
+    if (document.getElementById('ss-username')) document.getElementById('ss-username').value = '';
+    if (document.getElementById('ss-password')) document.getElementById('ss-password').value = '';
     document.getElementById('inactivity-overlay').style.display = 'none';
     document.getElementById('session-screen').style.display     = 'flex';
 }
@@ -1469,23 +1527,21 @@ async function autoDisconnect() {
 // ═══════════════════════════════════════════════════════════
 // ── fetch helper (via Cloudflare proxy) ──
 async function apsFetch(action, body) {
-    if (action === 'save') {
-        // POST for save (large payload)
+    const POST_ACTIONS = ['save','create_user','delete_user','change_password','release'];
+    if (POST_ACTIONS.includes(action)) {
+        const payload = { action, token: sessionToken, ...(body||{}) };
         const res = await fetch(SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, user: body.user, data: body.data }),
+            body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
     }
-    // GET for all other actions
+    // GET
     const params = new URLSearchParams({ action });
-    if (body) {
-        Object.entries(body).forEach(([k, v]) => {
-            if (v !== undefined && v !== null) params.set(k, String(v));
-        });
-    }
+    if (sessionToken) params.set('token', sessionToken);
+    if (body) Object.entries(body).forEach(([k,v]) => { if (v !== undefined && v !== null) params.set(k, String(v)); });
     const res = await fetch(SCRIPT_URL + '?' + params.toString());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
@@ -1506,7 +1562,7 @@ async function persist() {
     flashSaveStatus('saving');
 
     // Save in background — doesn't block the UI
-    apsFetch('save', { user: sessionUser, data }).then(res => {
+    apsFetch('save', { data }).then(res => {
         if (res.ok) {
             flashSaveStatus('saved');
         } else if (res.reason === 'lock_expired') {
@@ -1560,8 +1616,8 @@ function importFromFile(e) {
 }
 
 window.addEventListener('beforeunload', () => {
-    if (sessionUser) {
-        const blob = new Blob([JSON.stringify({ action: 'release', user: sessionUser })], { type: 'application/json' });
+    if (sessionToken) {
+        const blob = new Blob([JSON.stringify({ action: 'release', token: sessionToken })], { type: 'application/json' });
         navigator.sendBeacon(SCRIPT_URL, blob);
     }
 });
@@ -1577,6 +1633,7 @@ function switchTab(name, btn) {
     if (name === 'agenda') renderCalendar();
     if (name === 'checklist') renderChecklist();
     if (name === 'setlist') renderSavedSetlists();
+    if (name === 'admin') { renderAdminUsers(); updateSessionUI(); }
     if (name === 'stock') { renderStock(); if (currentStockView==='merch') { renderMerchButtons(); renderCaisseJournal(); } }
     if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('open');
 }
@@ -3589,6 +3646,7 @@ function switchTabMobile(name, btn) {
     if (name === 'agenda') renderCalendar();
     if (name === 'checklist') renderChecklist();
     if (name === 'setlist') renderSavedSetlists();
+    if (name === 'admin') { renderAdminUsers(); updateSessionUI(); }
     closeSidebarMobile();
 }
 
@@ -3628,6 +3686,103 @@ window.addEventListener('popstate', () => {
     const modal = document.getElementById('modal');
     if (modal && modal.classList.contains('active')) { closeModal(); history.pushState(null, ''); }
 });
+
+
+// ══════════════════════════════════════════════════════════════
+//  ADMIN PANEL
+// ══════════════════════════════════════════════════════════════
+
+async function renderAdminUsers() {
+    const c = document.getElementById('admin-users-list');
+    if (!c) return;
+    c.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;padding:0.5rem 0;"><i class="fas fa-spinner fa-spin" style="margin-right:0.4rem;"></i>Chargement…</div>';
+    try {
+        const res = await apsFetch('list_users', {});
+        if (!res.ok) { c.innerHTML = '<div style="color:var(--danger);font-size:0.85rem;">Erreur : ' + res.reason + '</div>'; return; }
+        if (!res.users.length) { c.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:1rem;">Aucun utilisateur.</div>'; return; }
+        c.innerHTML = res.users.map(u => {
+            const isMe = u.username === sessionUser.toLowerCase() || u.displayName === sessionUser;
+            const roleColor = u.role === 'admin' ? 'var(--warning)' : 'var(--accent-primary)';
+            const roleLabel = u.role === 'admin' ? '👑 Admin' : '👤 Membre';
+            return '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;margin-bottom:0.5rem;">'
+                + '<div style="width:36px;height:36px;border-radius:50%;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;flex-shrink:0;">' + (u.displayName||u.username).charAt(0).toUpperCase() + '</div>'
+                + '<div style="flex:1;min-width:0;">'
+                + '<div style="font-weight:600;">' + (u.displayName||u.username) + (isMe ? ' <span style="font-size:0.7rem;color:var(--success);">(moi)</span>' : '') + '</div>'
+                + '<div style="font-size:0.75rem;color:'+roleColor+';">' + roleLabel + ' · <span style="color:var(--text-secondary);">@' + u.username + '</span></div>'
+                + '</div>'
+                + (!isMe ? '<button onclick="adminDeleteUser(&quot;'+u.username+'&quot;)" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>' : '')
+                + '</div>';
+        }).join('');
+    } catch(e) {
+        c.innerHTML = '<div style="color:var(--danger);font-size:0.85rem;">Erreur de connexion.</div>';
+    }
+}
+
+function openAdminCreateUser() {
+    document.getElementById('modal-title').textContent = 'Créer un utilisateur';
+    document.getElementById('modal-body').innerHTML = `
+        <div class="form-group"><label>Identifiant (login)</label><input id="adm-username" type="text" placeholder="ex: jean" style="text-transform:lowercase;"></div>
+        <div class="form-group"><label>Nom affiché</label><input id="adm-displayname" type="text" placeholder="ex: Jean Dupont"></div>
+        <div class="form-group"><label>Mot de passe</label><input id="adm-password" type="password" placeholder="Minimum 4 caractères"></div>
+        <div class="form-group"><label>Rôle</label>
+            <select id="adm-role">
+                <option value="member">👤 Membre</option>
+                <option value="admin">👑 Administrateur</option>
+            </select>
+        </div>`;
+    document.querySelector('.modal-footer').style.display = '';
+    document.querySelector('.modal-footer .btn-primary').onclick = adminCreateUser;
+    document.querySelector('.modal-footer .btn-primary').innerHTML = '<i class="fas fa-user-plus"></i> Créer';
+    document.getElementById('modal').classList.add('active');
+}
+
+async function adminCreateUser() {
+    const username    = (document.getElementById('adm-username')?.value||'').trim().toLowerCase();
+    const displayName = (document.getElementById('adm-displayname')?.value||'').trim();
+    const password    = document.getElementById('adm-password')?.value||'';
+    const role        = document.getElementById('adm-role')?.value||'member';
+    if (!username || !password || !displayName) { showToast('Tous les champs sont requis', true); return; }
+    if (password.length < 4) { showToast('Mot de passe trop court (min 4 caractères)', true); return; }
+    try {
+        const res = await apsFetch('create_user', { username, password, role, displayName });
+        if (res.ok) {
+            closeModal();
+            renderAdminUsers();
+            showToast('Utilisateur "' + displayName + '" créé ✓');
+        } else {
+            const msgs = { user_exists:'Cet identifiant existe déjà', missing_fields:'Champs manquants', password_too_short:'Mot de passe trop court', forbidden:'Accès refusé' };
+            showToast(msgs[res.reason] || 'Erreur : ' + res.reason, true);
+        }
+    } catch(e) { showToast('Erreur de connexion', true); }
+}
+
+async function adminDeleteUser(username) {
+    if (!confirm('Supprimer l\'utilisateur "' + username + '" ?')) return;
+    try {
+        const res = await apsFetch('delete_user', { username });
+        if (res.ok) { renderAdminUsers(); showToast('Utilisateur supprimé'); }
+        else { showToast('Erreur : ' + res.reason, true); }
+    } catch(e) { showToast('Erreur de connexion', true); }
+}
+
+async function adminChangeMyPassword() {
+    const p1 = document.getElementById('admin-new-pass')?.value||'';
+    const p2 = document.getElementById('admin-new-pass2')?.value||'';
+    if (!p1 || !p2) { showToast('Remplissez les deux champs', true); return; }
+    if (p1 !== p2)  { showToast('Les mots de passe ne correspondent pas', true); return; }
+    if (p1.length < 4) { showToast('Mot de passe trop court (min 4 caractères)', true); return; }
+    try {
+        const res = await apsFetch('change_password', { newPassword: p1 });
+        if (res.ok) {
+            document.getElementById('admin-new-pass').value  = '';
+            document.getElementById('admin-new-pass2').value = '';
+            showToast('Mot de passe modifié ✓');
+        } else {
+            const msgs = { wrong_password:'Ancien mot de passe incorrect', password_too_short:'Trop court', forbidden:'Accès refusé' };
+            showToast(msgs[res.reason] || 'Erreur : ' + res.reason, true);
+        }
+    } catch(e) { showToast('Erreur de connexion', true); }
+}
 
 // ── BOOT ──
 document.addEventListener('DOMContentLoaded', initApp);
