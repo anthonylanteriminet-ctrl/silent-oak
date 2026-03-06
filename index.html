@@ -2223,7 +2223,7 @@ function renderCaisseJournal() {
         const txNum = txns.length - idx; // descending label
         const lines = tx.lines.map(l=>`
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;padding:0.15rem 0;color:var(--text-secondary);">
-                <span>${l.qty > 1 ? `<span style="background:var(--accent-primary);color:white;border-radius:4px;padding:0 4px;font-size:0.7rem;margin-right:3px;">${l.qty}×</span>` : ''} ${l.name}</span>
+                <span>${l.qty > 1 ? '<span style="background:var(--accent-primary);color:white;border-radius:4px;padding:0 4px;font-size:0.7rem;margin-right:3px;">'+l.qty+'×</span>' : ''} ${l.name}</span>
                 <span style="color:var(--text-primary);font-weight:600;">${(l.price*l.qty).toFixed(2)}€</span>
             </div>`;}).join('');
         return `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;margin-bottom:0.4rem;overflow:hidden;">
