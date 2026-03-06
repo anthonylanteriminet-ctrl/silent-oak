@@ -2274,8 +2274,8 @@ async function clearCaisse() {
     for (const tx of (data.caisse || [])) {
         for (const line of (tx.lines || [])) {
             if (line.free) continue;
-            const item = data.stock.find(s => s.id === line.id);
-            if (item) item.quantity = String(parseInt(item.quantity||0) + line.qty);
+            const item = data.stock.find(s => String(s.id) === String(line.id));
+            if (item) item.quantity = String(parseInt(item.quantity||0) + parseInt(line.qty||0));
         }
     }
     data.caisse = [];
