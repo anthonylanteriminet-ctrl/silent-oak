@@ -1303,9 +1303,16 @@ async function initApp() {
                 sessionToken = s.token;
                 const res = await apsFetch('renew', {});
                 if (res.ok) {
-                    sessionUser    = s.displayName;
-                    sessionRole    = s.role;
+                    sessionUser    = s.displayName || '';
+                    sessionRole    = res.role || s.role || '';
                     sessionExpires = res.expires;
+                    // Load data: use renew payload if available, otherwise fetch separately
+                    if (res.data && Object.keys(res.data).length > 0) {
+                        await loadDataFromServer(res.data);
+                    } else {
+                        const dataRes = await apsFetch('get_data', {});
+                        if (dataRes.ok) await loadDataFromServer(dataRes.data);
+                    }
                     showApp(); return;
                 }
             }
