@@ -1458,9 +1458,12 @@ async function loadDataFromServer(serverData) {
 //  PERSIST
 // ═══════════════════════════════════════════════════════════
 async function persist() {
+    // Update UI immediately — don't wait for server
+    updateStats(); updateBadges();
     flashSaveStatus('saving');
-    try {
-        const res = await apsFetch('save', { user: sessionUser, data });
+
+    // Save in background — doesn't block the UI
+    apsFetch('save', { user: sessionUser, data }).then(res => {
         if (res.ok) {
             flashSaveStatus('saved');
         } else if (res.reason === 'lock_expired') {
@@ -1471,12 +1474,11 @@ async function persist() {
             flashSaveStatus('error');
             showToast('Erreur de sauvegarde : ' + res.reason, true);
         }
-    } catch(e) {
+    }).catch(e => {
         flashSaveStatus('error');
         showToast('Hors ligne — sauvegardé localement', true);
         localStorage.setItem('silentOak_offline_' + sessionUser, JSON.stringify(data));
-    }
-    updateStats(); updateBadges();
+    });
 }
 
 function flashSaveStatus(state) {
