@@ -773,6 +773,7 @@
             <li><button class="nav-link" onclick="switchTab('checklist', this)"><i class="fas fa-clipboard-check"></i><span>Checklist Concert</span></button></li>
             <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
             <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
+            <li id="nav-admin-item" style="display:none;"><button class="nav-link" onclick="switchTab('admin', this)"><i class="fas fa-shield-halved"></i><span>Administration</span></button></li>
         </ul>
 
                 <div class="sidebar-footer">
@@ -1306,12 +1307,14 @@ async function initApp() {
                     sessionUser    = s.displayName || '';
                     sessionRole    = res.role || s.role || '';
                     sessionExpires = res.expires;
-                    // Load data: use renew payload if available, otherwise fetch separately
+                    // Charge les données : depuis renew si dispo, sinon appel get_data
                     if (res.data && Object.keys(res.data).length > 0) {
                         await loadDataFromServer(res.data);
                     } else {
-                        const dataRes = await apsFetch('get_data', {});
-                        if (dataRes.ok) await loadDataFromServer(dataRes.data);
+                        try {
+                            const dr = await apsFetch('get_data', {});
+                            if (dr.ok) await loadDataFromServer(dr.data);
+                        } catch(e) {}
                     }
                     showApp(); return;
                 }
@@ -3412,7 +3415,7 @@ function computeBalances() {
     data.members.forEach(m => balances[m.id] = 0);
     data.transactions.forEach(t => {
         if (!t.paidBy || !t.splitBetween || !t.splitBetween.length) return;
-        if (t.type === 'expense' && t.reimbursed === true) return; // skip reimbursed expenses
+        if (t.type === 'expense' && t.reimbursed === true) return;
         const amount = parseFloat(t.amount) || 0;
         const share  = amount / t.splitBetween.length;
         if (t.type === 'expense') {
@@ -3579,14 +3582,10 @@ function renderTransactionList() {
         const shareAmt = i.splitBetween?.length ? (parseFloat(i.amount||0)/i.splitBetween.length).toFixed(2) : null;
         const isExpense = i.type === 'expense';
         const isReimbursed = isExpense && i.reimbursed === true;
-
         const cardOpacity = isReimbursed ? 'opacity:0.55;' : '';
-        const amountStyle = isReimbursed
-            ? 'text-decoration:line-through;color:var(--text-secondary);'
-            : `color:${i.type==='income'?'var(--success)':'var(--danger)'}`;
-
+        const amountStyle = isReimbursed ? 'text-decoration:line-through;color:var(--text-secondary);' : `color:${i.type==='income'?'var(--success)':'var(--danger)'}`;
         const reimbursedBtn = isExpense ? `
-        <button onclick="toggleReimbursed('${i.id}')" title="${isReimbursed?'Marquer comme non remboursé':'Marquer comme remboursé'}"
+        <button onclick="toggleReimbursed('${i.id}')"
             style="margin-top:0.75rem;width:100%;padding:0.5rem 0.75rem;border-radius:8px;border:1px solid ${isReimbursed?'var(--success)':'var(--border)'};
             background:${isReimbursed?'rgba(16,185,129,0.15)':'transparent'};
             color:${isReimbursed?'var(--success)':'var(--text-secondary)'};
