@@ -3756,15 +3756,7 @@ async function renderAdminUsers() {
                 + '<div style="font-weight:600;">' + (u.displayName||u.username) + (isMe ? ' <span style="font-size:0.7rem;color:var(--success);">(moi)</span>' : '') + '</div>'
                 + '<div style="font-size:0.75rem;color:'+roleColor+';">' + roleLabel + ' · <span style="color:var(--text-secondary);">@' + u.username + '</span></div>'
                 + '</div>'
-                + '<div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0;">'
-                + (function(){
-                    const s = (data.userSettings && data.userSettings[u.username]) || {};
-                    const exempt = !!s.noAutoDisconnect;
-                    const btnStyle = 'color:' + (exempt ? 'var(--warning)' : 'var(--text-secondary)') + ';font-size:0.8rem;width:auto;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid ' + (exempt ? 'var(--warning)' : 'var(--border)');
-                    return '<button onclick="adminToggleExempt(\'' + u.username + '\')" class="btn-icon" title="' + (exempt ? 'Retirer exemption' : 'Exempter déconnexion auto') + '" style="' + btnStyle + '">' + (exempt ? '♾️' : '🕐') + '</button>';
-                  })()
-                + (!isMe ? '<button onclick="adminDeleteUser(&quot;'+u.username+'&quot;)" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>' : '')
-                + '</div>'
+                + (!isMe ? '<button onclick="adminDeleteUser(\'' + u.username + '\')" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>' : '')
                 + '</div>';
         }).join('');
     } catch(e) {
