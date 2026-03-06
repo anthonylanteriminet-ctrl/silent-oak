@@ -1276,7 +1276,7 @@ const HEARTBEAT_MS    = 60 * 1000;        // heartbeat toutes les 60s
 // ═══════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════
-let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[] };
+let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[], userSettings:{} };
 let currentMonth  = new Date();
 let contactFilter = 'all';
 let modalType = '';
@@ -1497,6 +1497,9 @@ function resetActivity() {
 }
 function checkInactivity() {
     if (!sessionUser) return;
+    const uname = sessionUser.toLowerCase();
+    const settings = (data.userSettings && data.userSettings[uname]) || {};
+    if (settings.noAutoDisconnect) return;
     if (Date.now() - lastActivity >= INACTIVITY_WARN) showInactivityWarning();
 }
 
@@ -2267,12 +2270,20 @@ async function quickSellOne(itemId) {
 function clearPanier() { panier = []; renderPanier(); }
 
 async function clearCaisse() {
-    if (!confirm('Réinitialiser toute la caisse ? (Le stock reste tel quel)')) return;
+    if (!confirm('Réinitialiser toute la caisse ? Les articles vendus seront remis en stock.')) return;
+    for (const tx of (data.caisse || [])) {
+        for (const line of (tx.lines || [])) {
+            if (line.free) continue;
+            const item = data.stock.find(s => s.id === line.id);
+            if (item) item.quantity = String(parseInt(item.quantity||0) + line.qty);
+        }
+    }
     data.caisse = [];
     await persist();
+    renderStock();
     renderCaisseJournal();
     updateCaisseStats();
-    showToast('Caisse réinitialisée');
+    showToast('Caisse réinitialisée — stock remis à jour');
 }
 
 function renderCaisseJournal() {
@@ -3745,7 +3756,14 @@ async function renderAdminUsers() {
                 + '<div style="font-weight:600;">' + (u.displayName||u.username) + (isMe ? ' <span style="font-size:0.7rem;color:var(--success);">(moi)</span>' : '') + '</div>'
                 + '<div style="font-size:0.75rem;color:'+roleColor+';">' + roleLabel + ' · <span style="color:var(--text-secondary);">@' + u.username + '</span></div>'
                 + '</div>'
+                + '<div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0;">'
+                + (function(){
+                    const s = (data.userSettings && data.userSettings[u.username]) || {};
+                    const exempt = !!s.noAutoDisconnect;
+                    return '<button onclick="adminToggleExempt(&quot;'+u.username+'&quot;)" class="btn-icon" title="'+(exempt?'Déconnecter automatiquement':'Exempter de déconnexion auto')+'" style="color:'+(exempt?'var(--warning)':'var(--text-secondary)');font-size:0.8rem;width:auto;padding:0.25rem 0.5rem;border-radius:6px;border:1px solid '+(exempt?'var(--warning)':'var(--border)')+';">'+(exempt?'<i class="fas fa-infinity"></i> Exempté':'<i class="fas fa-clock"></i> Auto')+'</button>';
+                  })()
                 + (!isMe ? '<button onclick="adminDeleteUser(&quot;'+u.username+'&quot;)" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>' : '')
+                + '</div>'
                 + '</div>';
         }).join('');
     } catch(e) {
@@ -3798,6 +3816,16 @@ async function adminDeleteUser(username) {
         if (res.ok) { renderAdminUsers(); showToast('Utilisateur supprimé'); }
         else { showToast('Erreur : ' + res.reason, true); }
     } catch(e) { showToast('Erreur de connexion', true); }
+}
+
+async function adminToggleExempt(username) {
+    if (!data.userSettings) data.userSettings = {};
+    if (!data.userSettings[username]) data.userSettings[username] = {};
+    const current = !!data.userSettings[username].noAutoDisconnect;
+    data.userSettings[username].noAutoDisconnect = !current;
+    await persist();
+    renderAdminUsers();
+    showToast(!current ? username + ' exempté de déconnexion auto ♾️' : username + ' soumis à la déconnexion auto');
 }
 
 async function adminChangeMyPassword() {
