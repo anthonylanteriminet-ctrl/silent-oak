@@ -796,17 +796,61 @@
                     <button class="btn-primary" onclick="openModal('quick-add')"><i class="fas fa-plus"></i> Ajout Rapide</button>
                 </div>
             </div>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-label">Tâches en cours</div><div class="stat-value" id="stat-tasks">0</div><div class="stat-change">Total actives</div></div>
-                <div class="stat-card"><div class="stat-label">Prochains concerts</div><div class="stat-value" id="stat-events">0</div><div class="stat-change">À venir</div></div>
-                <div class="stat-card"><div class="stat-label">Budget disponible</div><div class="stat-value" id="stat-budget">0€</div><div class="stat-change">Mis à jour</div></div>
-                <div class="stat-card"><div class="stat-label">Contacts actifs</div><div class="stat-value" id="stat-contacts">0</div><div class="stat-change">Dans le réseau</div></div>
+            <!-- Stats row 1 -->
+            <div class="stats-grid" style="margin-bottom:1rem;">
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('agenda')">
+                    <div class="stat-label"><i class="fas fa-music" style="color:var(--accent-primary);margin-right:0.3rem;"></i>Prochains concerts</div>
+                    <div class="stat-value" id="stat-concerts">0</div>
+                    <div class="stat-change" id="stat-concerts-next">—</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('agenda')">
+                    <div class="stat-label"><i class="fas fa-drum" style="color:var(--success);margin-right:0.3rem;"></i>Prochaines répétitions</div>
+                    <div class="stat-value" id="stat-repets">0</div>
+                    <div class="stat-change" id="stat-repets-next">—</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('finance')">
+                    <div class="stat-label"><i class="fas fa-wallet" style="color:var(--warning);margin-right:0.3rem;"></i>Balance financière</div>
+                    <div class="stat-value" id="stat-budget">0€</div>
+                    <div class="stat-change" id="stat-budget-change">Recettes - Dépenses</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('tasks')">
+                    <div class="stat-label"><i class="fas fa-tasks" style="color:var(--danger);margin-right:0.3rem;"></i>Tâches en cours</div>
+                    <div class="stat-value" id="stat-tasks">0</div>
+                    <div class="stat-change" id="stat-tasks-urgent">—</div>
+                </div>
             </div>
+            <!-- Stats row 2 -->
+            <div class="stats-grid" style="margin-bottom:1.5rem;">
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('contacts')">
+                    <div class="stat-label"><i class="fas fa-address-book" style="color:#ec4899;margin-right:0.3rem;"></i>Contacts</div>
+                    <div class="stat-value" id="stat-contacts">0</div>
+                    <div class="stat-change">Dans le réseau</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('setlist')">
+                    <div class="stat-label"><i class="fas fa-list-music" style="color:var(--accent-secondary);margin-right:0.3rem;"></i>Répertoire</div>
+                    <div class="stat-value" id="stat-setlist">0</div>
+                    <div class="stat-change" id="stat-setlist-sub">morceaux</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('stock')">
+                    <div class="stat-label"><i class="fas fa-boxes" style="color:var(--success);margin-right:0.3rem;"></i>Stock merch</div>
+                    <div class="stat-value" id="stat-merch">0</div>
+                    <div class="stat-change" id="stat-merch-sub">articles</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer;" onclick="switchTabByName('members')">
+                    <div class="stat-label"><i class="fas fa-users" style="color:var(--warning);margin-right:0.3rem;"></i>Membres</div>
+                    <div class="stat-value" id="stat-members">0</div>
+                    <div class="stat-change">Dans le groupe</div>
+                </div>
+            </div>
+
+            <!-- Prochain événement featured -->
+            <div id="dash-next-event" style="margin-bottom:1.5rem;"></div>
+
             <div class="quick-actions">
+                <button class="quick-action-btn" onclick="openModal('add-event')"><i class="fas fa-calendar-plus"></i> Nouvel événement</button>
                 <button class="quick-action-btn" onclick="switchTabByName('tasks')"><i class="fas fa-check-circle"></i> Voir les tâches</button>
-                <button class="quick-action-btn" onclick="switchTabByName('agenda')"><i class="fas fa-calendar"></i> Calendrier</button>
-                <button class="quick-action-btn" onclick="switchTabByName('stock')"><i class="fas fa-box"></i> Inventaire</button>
-                <button class="quick-action-btn" onclick="switchTabByName('contacts')"><i class="fas fa-user-plus"></i> Nouveau Contact</button>
+                <button class="quick-action-btn" onclick="switchTabByName('stock')"><i class="fas fa-cash-register"></i> Caisse Merch</button>
+                <button class="quick-action-btn" onclick="openModal('add-transaction')"><i class="fas fa-coins"></i> Nouvelle transaction</button>
             </div>
         </div>
 
@@ -1200,7 +1244,7 @@ const HEARTBEAT_MS    = 60 * 1000;        // heartbeat toutes les 60s
 // ═══════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════
-let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[] };
+let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[] };
 let currentMonth  = new Date();
 let contactFilter = 'all';
 let modalType = '';
@@ -1766,9 +1810,60 @@ function closeModal() { document.getElementById('modal').classList.remove('activ
 
 function openModalWithDate(type, dateStr) {
     openModal(type);
-    // After the modal renders, override the date field with the clicked date
     const f2 = document.getElementById('f2');
     if (f2 && type === 'add-event') f2.value = dateStr;
+}
+
+function openDayModal(dateStr) {
+    const dayEvents = data.events.filter(e => e.date === dateStr);
+    const dateLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const today = new Date(); today.setHours(0,0,0,0);
+    const isPast = new Date(dateStr + 'T12:00:00') < today;
+
+    const eventsHtml = dayEvents.length
+        ? dayEvents.map(ev => {
+            const typeColors = { concert:'var(--accent-primary)', repetition:'var(--success)', enregistrement:'var(--warning)', meeting:'#ec4899', autre:'var(--text-secondary)' };
+            const col = typeColors[ev.type] || 'var(--accent-primary)';
+            return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;border-left:3px solid ${col};margin-bottom:0.5rem;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:0.95rem;">${ev.title}</div>
+                    <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;">${ev.time||''} ${ev.location?'· '+ev.location:''}</div>
+                    ${ev.goals?`<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;font-style:italic;">${ev.goals}</div>`:''}
+                </div>
+                <span style="font-size:0.72rem;color:${col};background:rgba(99,102,241,0.1);padding:0.2rem 0.5rem;border-radius:6px;white-space:nowrap;">${ev.type}</span>
+                <div style="display:flex;gap:0.3rem;">
+                    ${!isPast ? `<button onclick="closeModal();setTimeout(()=>openModal('add-event',${ev.id}),200)" class="btn-icon" style="color:var(--accent-primary);" title="Modifier"><i class="fas fa-pen"></i></button>` : ''}
+                    <button onclick="deleteEventFromDay(${ev.id},'${dateStr}')" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`;
+        }).join('')
+        : `<p style="color:var(--text-secondary);font-size:0.88rem;text-align:center;padding:1rem 0;"><i class="fas fa-calendar-times" style="display:block;font-size:1.5rem;margin-bottom:0.5rem;opacity:0.3;"></i>Aucun événement ce jour</p>`;
+
+    document.getElementById('modal-title').textContent = dateLabel;
+    document.getElementById('modal-body').innerHTML = `
+        <div style="margin-bottom:1rem;">${eventsHtml}</div>`;
+    
+    const footer = document.querySelector('.modal-footer');
+    footer.style.display = '';
+    footer.innerHTML = isPast
+        ? `<button class="btn-secondary" onclick="closeModal()">Fermer</button>`
+        : `<button class="btn-secondary" onclick="closeModal()">Fermer</button>
+           <button class="btn-primary" onclick="closeModal();setTimeout(()=>openModalWithDate('add-event','${dateStr}'),200)"><i class="fas fa-plus"></i> Ajouter un événement</button>`;
+    
+    document.getElementById('modal').classList.add('active');
+}
+
+async function deleteEventFromDay(id, dateStr) {
+    if (!confirm('Supprimer cet événement ?')) return;
+    data.events = data.events.filter(e => e.id !== id);
+    await persist();
+    renderEvents();
+    updateStats();
+    // Refresh day modal if still open
+    if (document.getElementById('modal').classList.contains('active')) {
+        openDayModal(dateStr);
+    }
+    renderCalendar();
 }
 
 async function saveCurrentForm() {
@@ -1799,11 +1894,96 @@ function updateUI() {
 }
 
 function updateStats() {
-    document.getElementById('stat-tasks').textContent    = data.tasks.filter(t=>!t.completed).length;
-    document.getElementById('stat-events').textContent   = data.events.filter(e=>new Date(e.date)>=new Date()).length;
-    document.getElementById('stat-contacts').textContent = data.contacts.length;
+    const now = new Date(); now.setHours(0,0,0,0);
+    const futureEvents = data.events.filter(e => new Date(e.date+'T12:00:00') >= now);
+
+    // Concerts
+    const concerts = futureEvents.filter(e => e.type === 'concert').sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const el_c = document.getElementById('stat-concerts');
+    if (el_c) el_c.textContent = concerts.length;
+    const el_cn = document.getElementById('stat-concerts-next');
+    if (el_cn) el_cn.textContent = concerts.length
+        ? 'Prochain : ' + new Date(concerts[0].date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'})
+        : 'Aucun concert planifié';
+
+    // Répétitions
+    const repets = futureEvents.filter(e => e.type === 'repetition').sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const el_r = document.getElementById('stat-repets');
+    if (el_r) el_r.textContent = repets.length;
+    const el_rn = document.getElementById('stat-repets-next');
+    if (el_rn) el_rn.textContent = repets.length
+        ? 'Prochaine : ' + new Date(repets[0].date+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short'})
+        : 'Aucune répétition planifiée';
+
+    // Budget
     const bal = data.transactions.reduce((a,t)=>t.type==='income'?a+ +t.amount:a- +t.amount, 0);
-    document.getElementById('stat-budget').textContent   = bal.toFixed(0)+'€';
+    const el_b = document.getElementById('stat-budget');
+    if (el_b) { el_b.textContent = bal.toFixed(0)+'€'; el_b.style.cssText = bal >= 0 ? '-webkit-text-fill-color:var(--success);color:var(--success)' : '-webkit-text-fill-color:var(--danger);color:var(--danger)'; }
+    const income  = data.transactions.filter(t=>t.type==='income').reduce((a,t)=>a+ +t.amount,0);
+    const expense = data.transactions.filter(t=>t.type==='expense').reduce((a,t)=>a+ +t.amount,0);
+    const el_bc = document.getElementById('stat-budget-change');
+    if (el_bc) el_bc.textContent = '+'+income.toFixed(0)+'€ / -'+expense.toFixed(0)+'€';
+
+    // Tâches
+    const openTasks = data.tasks.filter(t=>!t.completed);
+    const el_t = document.getElementById('stat-tasks');
+    if (el_t) el_t.textContent = openTasks.length;
+    const urgent = openTasks.filter(t=>t.priority==='high').length;
+    const el_tu = document.getElementById('stat-tasks-urgent');
+    if (el_tu) el_tu.textContent = urgent ? urgent+' urgente(s)' : 'Aucune urgente';
+
+    // Contacts
+    const el_co = document.getElementById('stat-contacts');
+    if (el_co) el_co.textContent = data.contacts.length;
+
+    // Répertoire
+    const el_s = document.getElementById('stat-setlist');
+    if (el_s) el_s.textContent = (data.setlist||[]).length;
+    const inRep = (data.setlist||[]).filter(s=>s.status==='repertoire').length;
+    const el_ss = document.getElementById('stat-setlist-sub');
+    if (el_ss) el_ss.textContent = inRep + ' au répertoire actif';
+
+    // Merch
+    const merch = (data.stock||[]).filter(s=>s.category==='merch');
+    const el_m = document.getElementById('stat-merch');
+    if (el_m) el_m.textContent = merch.reduce((a,s)=>a+(parseInt(s.quantity)||0),0);
+    const el_ms = document.getElementById('stat-merch-sub');
+    if (el_ms) el_ms.textContent = merch.length + ' référence(s)';
+
+    // Membres
+    const el_mb = document.getElementById('stat-members');
+    if (el_mb) el_mb.textContent = (data.members||[]).length;
+
+    // Prochain événement featured
+    const allFuture = futureEvents.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const nextEl = document.getElementById('dash-next-event');
+    if (nextEl) {
+        if (!allFuture.length) { nextEl.innerHTML = ''; }
+        else {
+            const ev = allFuture[0];
+            const typeColors = { concert:'var(--accent-primary)', repetition:'var(--success)', enregistrement:'var(--warning)', meeting:'#ec4899', autre:'var(--text-secondary)' };
+            const typeLabels = { concert:'🎸 Concert', repetition:'🥁 Répétition', enregistrement:'🎙 Enregistrement', meeting:'📋 Réunion', autre:'📅 Événement' };
+            const col = typeColors[ev.type] || 'var(--accent-primary)';
+            const daysLeft = Math.ceil((new Date(ev.date+'T12:00:00') - now) / 86400000);
+            const daysLabel = daysLeft === 0 ? "Aujourd'hui !" : daysLeft === 1 ? 'Demain !' : 'Dans ' + daysLeft + ' jours';
+            nextEl.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border);border-left:4px solid ${col};border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;">
+                    <div style="flex-shrink:0;text-align:center;min-width:48px;">
+                        <div style="font-size:1.5rem;font-weight:800;color:${col};line-height:1;">${new Date(ev.date+'T12:00:00').getDate()}</div>
+                        <div style="font-size:0.72rem;text-transform:uppercase;color:var(--text-secondary);">${new Date(ev.date+'T12:00:00').toLocaleDateString('fr-FR',{month:'short'})}</div>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:${col};margin-bottom:0.2rem;">${typeLabels[ev.type]||ev.type} · Prochain événement</div>
+                        <div style="font-weight:700;font-size:1rem;">${ev.title}</div>
+                        ${ev.location?`<div style="font-size:0.82rem;color:var(--text-secondary);">${ev.location}</div>`:''}
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:0.82rem;font-weight:700;color:${col};">${daysLabel}</div>
+                        ${ev.time?`<div style="font-size:0.78rem;color:var(--text-secondary);">${ev.time}</div>`:''}
+                    </div>
+                </div>`;
+        }
+    }
 }
 
 function updateBadges() {
@@ -2045,7 +2225,7 @@ function renderCaisseJournal() {
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;padding:0.15rem 0;color:var(--text-secondary);">
                 <span>${l.qty > 1 ? `<span style="background:var(--accent-primary);color:white;border-radius:4px;padding:0 4px;font-size:0.7rem;margin-right:3px;">${l.qty}×</span>` : ''} ${l.name}</span>
                 <span style="color:var(--text-primary);font-weight:600;">${(l.price*l.qty).toFixed(2)}€</span>
-            </div>`).join('');
+            </div>`;}).join('');
         return `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;margin-bottom:0.4rem;overflow:hidden;">
             <div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.05);">
                 <div style="background:var(--accent-gradient);color:white;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">#${txNum}</div>
@@ -2402,7 +2582,7 @@ function renderCalendar() {
                 div.appendChild(dot);
             });
         }
-        div.onclick=()=>openModalWithDate('add-event', ds); cal.appendChild(div);
+        div.onclick=()=>openDayModal(ds); cal.appendChild(div);
     }
 }
 
@@ -2640,6 +2820,20 @@ const GEAR_LIBRARY_DEFAULTS = [
     {id:'gl_26', cat:'🎒 Divers', name:'Eau / Collation'},
 ];
 
+// ── Gear Categories (editable, with color) ─────────────────
+const GEAR_CATEGORIES_DEFAULTS = [
+    { id:'gc_1', name:'🎸 Instruments',   color:'#6366f1' },
+    { id:'gc_2', name:'🎤 Voix / Micros', color:'#ec4899' },
+    { id:'gc_3', name:'🥁 Batterie',      color:'#f59e0b' },
+    { id:'gc_4', name:'🎹 Claviers',      color:'#8b5cf6' },
+    { id:'gc_5', name:'🔌 Câbles',        color:'#10b981' },
+    { id:'gc_6', name:'🎒 Divers',        color:'#64748b' },
+];
+
+function getGearCategories() {
+    return (data.gearCategories && data.gearCategories.length) ? data.gearCategories : GEAR_CATEGORIES_DEFAULTS;
+}
+
 // Musician shape: { id, name, groups: [ { id, name, items: [ {id, name, checked} ] } ] }
 
 function getGearLibrary() {
@@ -2715,9 +2909,14 @@ function renderGearLibraryPanel() {
     const lib = getGearLibrary();
     const cats = {};
     lib.forEach(item => { if (!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
-    panel.innerHTML = Object.entries(cats).map(([cat, items])=>`
-        <div style="margin-bottom:0.6rem;">
-            <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.3rem;padding:0.15rem 0.2rem;">${cat}</div>
+    const gearCats = getGearCategories();
+    panel.innerHTML = Object.entries(cats).map(([cat, items])=>{
+        const catDef = gearCats.find(c=>c.name===cat);
+        const col = catDef ? catDef.color : '#6366f1';
+        return `<div style="margin-bottom:0.6rem;">
+            <div style="display:flex;align-items:center;gap:0.35rem;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.3rem;padding:0.15rem 0.2rem;">
+                <span style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block;"></span>${cat}
+            </div>
             ${items.map(item=>`
                 <div onclick="addGearFromLibrary('${item.id}')"
                      style="display:flex;align-items:center;gap:0.5rem;padding:0.32rem 0.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;margin-bottom:0.22rem;cursor:pointer;font-size:0.81rem;transition:all 0.12s;"
@@ -2937,30 +3136,122 @@ async function deleteChecklistMusician(id) {
 
 // ── Gear library modal ──────────────────────────────────────
 
-function renderGearLibraryModal() {
-    const lib = getGearLibrary();
-    const cats = {};
-    lib.forEach(item=>{ if(!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
-    return `
+function renderGearLibraryModal(tab) {
+    tab = tab || 'items';
+    const lib  = getGearLibrary();
+    const cats = getGearCategories();
+    const catMap = {}; lib.forEach(item=>{ if(!catMap[item.cat]) catMap[item.cat]=[]; catMap[item.cat].push(item); });
+
+    const tabStyle = (t) => t === tab
+        ? 'padding:0.4rem 0.9rem;background:var(--accent-gradient);color:white;border:none;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;'
+        : 'padding:0.4rem 0.9rem;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;font-size:0.82rem;cursor:pointer;font-family:inherit;';
+
+    const tabBar = `<div style="display:flex;gap:0.4rem;margin-bottom:1rem;border-bottom:1px solid var(--border);padding-bottom:0.75rem;">
+        <button style="${tabStyle('items')}"    onclick="document.getElementById('modal-body').innerHTML=renderGearLibraryModal('items')"><i class="fas fa-list"></i> Articles</button>
+        <button style="${tabStyle('cats')}"     onclick="document.getElementById('modal-body').innerHTML=renderGearLibraryModal('cats')"><i class="fas fa-tags"></i> Catégories</button>
+    </div>`;
+
+    if (tab === 'items') {
+        const catOptions = cats.map(cat=>`<option value="${cat.name}">${cat.name}</option>`).join('');
+        return tabBar + `
         <div id="gear-lib-list">
-            ${Object.entries(cats).map(([cat, items])=>`
-            <div style="margin-bottom:1rem;">
-                <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;">${cat}</div>
-                ${items.map(item=>`
-                <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;background:var(--bg-tertiary);border-radius:6px;margin-bottom:0.25rem;font-size:0.85rem;">
-                    <span style="flex:1;">${item.name}</span>
-                    <button onclick="deleteGearLibItem('${item.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.65rem;color:var(--danger);"><i class="fas fa-trash"></i></button>
-                </div>`).join('')}
-            </div>`).join('')}
+            ${Object.entries(catMap).map(([cat, items])=>{
+                const catDef = cats.find(c=>c.name===cat);
+                const col = catDef ? catDef.color : '#6366f1';
+                return `<div style="margin-bottom:1rem;">
+                    <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--text-secondary);margin-bottom:0.4rem;">
+                        <span style="width:8px;height:8px;border-radius:50%;background:${col};display:inline-block;flex-shrink:0;"></span>${cat}
+                    </div>
+                    ${items.map(item=>`
+                    <div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;background:var(--bg-tertiary);border-radius:6px;margin-bottom:0.25rem;font-size:0.85rem;">
+                        <span style="flex:1;">${item.name}</span>
+                        <button onclick="deleteGearLibItem('${item.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.65rem;color:var(--danger);"><i class="fas fa-trash"></i></button>
+                    </div>`).join('')}
+                </div>`;
+            }).join('')}
         </div>
         <div style="border-top:1px solid var(--border);padding-top:1rem;margin-top:0.5rem;">
             <div style="font-size:0.8rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-secondary);">Ajouter un article</div>
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                 <input id="new-gear-lib-name" placeholder="Nom du matériel…" style="flex:1;min-width:140px;padding:0.6rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
-                <input id="new-gear-lib-cat" placeholder="Catégorie (ex: 🎸 Instruments)" style="flex:1;min-width:140px;padding:0.6rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                <select id="new-gear-lib-cat" style="flex:1;min-width:140px;padding:0.6rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;">
+                    ${catOptions}
+                </select>
                 <button class="btn-primary" onclick="addGearLibItem()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Ajouter</button>
             </div>
         </div>`;
+    }
+
+    // Tab: categories
+    return tabBar + `
+        <div id="gear-cats-list" style="margin-bottom:1rem;">
+            ${cats.map(cat=>`
+            <div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:var(--bg-tertiary);border-radius:8px;margin-bottom:0.35rem;border-left:4px solid ${cat.color};">
+                <input type="color" value="${cat.color}" onchange="updateGearCatColor('${cat.id}',this.value)"
+                    style="width:28px;height:28px;border:none;background:none;cursor:pointer;padding:0;border-radius:4px;flex-shrink:0;">
+                <span style="flex:1;font-size:0.88rem;font-weight:600;">${cat.name}</span>
+                <button onclick="renameGearCategory('${cat.id}')" class="btn-icon" style="color:var(--accent-primary);font-size:0.7rem;" title="Renommer"><i class="fas fa-pen"></i></button>
+                <button onclick="deleteGearCategory('${cat.id}')" class="btn-icon" style="color:var(--danger);font-size:0.7rem;" title="Supprimer"><i class="fas fa-trash"></i></button>
+            </div>`).join('')}
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:1rem;">
+            <div style="font-size:0.8rem;font-weight:600;margin-bottom:0.5rem;color:var(--text-secondary);">Nouvelle catégorie</div>
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="color" id="new-cat-color" value="#6366f1" style="width:36px;height:36px;border:none;background:none;cursor:pointer;padding:0;border-radius:6px;flex-shrink:0;">
+                <input id="new-cat-name" placeholder="ex: 🎷 Cuivres" style="flex:1;padding:0.6rem 0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:0.85rem;font-family:inherit;"
+                    onkeydown="if(event.key==='Enter')addGearCategory()">
+                <button class="btn-primary" onclick="addGearCategory()"><i class="fas fa-plus"></i> Ajouter</button>
+            </div>
+        </div>`;
+}
+
+async function addGearCategory() {
+    const name  = document.getElementById('new-cat-name')?.value.trim();
+    const color = document.getElementById('new-cat-color')?.value || '#6366f1';
+    if (!name) return;
+    if (!data.gearCategories || !data.gearCategories.length) data.gearCategories = [...GEAR_CATEGORIES_DEFAULTS];
+    if (data.gearCategories.some(c=>c.name.toLowerCase()===name.toLowerCase())) { showToast('Catégorie déjà existante', true); return; }
+    data.gearCategories.push({ id:'gc_'+Date.now(), name, color });
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderGearLibraryModal('cats');
+    renderGearLibraryPanel();
+    showToast('Catégorie "' + name + '" créée ✓');
+}
+
+async function deleteGearCategory(id) {
+    if (!confirm('Supprimer cette catégorie ?')) return;
+    if (!data.gearCategories || !data.gearCategories.length) data.gearCategories = [...GEAR_CATEGORIES_DEFAULTS];
+    data.gearCategories = data.gearCategories.filter(c=>c.id!==id);
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderGearLibraryModal('cats');
+    renderGearLibraryPanel();
+}
+
+async function renameGearCategory(id) {
+    if (!data.gearCategories || !data.gearCategories.length) data.gearCategories = [...GEAR_CATEGORIES_DEFAULTS];
+    const cat = data.gearCategories.find(c=>c.id===id);
+    if (!cat) return;
+    const newName = prompt('Nouveau nom :', cat.name);
+    if (!newName || !newName.trim()) return;
+    // Update name in library items too
+    if (data.gearLibrary && data.gearLibrary.length) {
+        data.gearLibrary.forEach(item => { if (item.cat === cat.name) item.cat = newName.trim(); });
+    }
+    cat.name = newName.trim();
+    await persist();
+    document.getElementById('modal-body').innerHTML = renderGearLibraryModal('cats');
+    renderGearLibraryPanel();
+    showToast('Catégorie renommée ✓');
+}
+
+async function updateGearCatColor(id, color) {
+    if (!data.gearCategories || !data.gearCategories.length) data.gearCategories = [...GEAR_CATEGORIES_DEFAULTS];
+    const cat = data.gearCategories.find(c=>c.id===id);
+    if (cat) cat.color = color;
+    await persist();
+    renderGearLibraryPanel();
+    // Live update the border color of the row
+    document.getElementById('modal-body').innerHTML = renderGearLibraryModal('cats');
 }
 
 async function addGearLibItem() {
