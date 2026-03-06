@@ -609,8 +609,7 @@
             .category-btn { white-space: nowrap; flex-shrink: 0; }
 
             /* Checklist two-panel: stack on mobile */
-            #checklist > div > div:first-child,
-            #checklist > div > div:last-child { /* handled by grid */ }
+
             /* Quick actions: 2×2 grid */
             .quick-actions {
                 display: grid;
@@ -690,7 +689,7 @@
             <p style="color:#94a3b8;font-size:0.85rem;margin-bottom:2rem;">Hub de gestion du groupe</p>
 
             <!-- State: enter name -->
-            <div id="ss-enter" style="">
+            <div id="ss-enter">
                 <p style="color:#94a3b8;margin-bottom:1.25rem;font-size:0.95rem;">Entrez votre prénom pour commencer</p>
                 <input id="ss-name" type="text" placeholder="Votre prénom…" maxlength="30"
                     onkeydown="if(event.key==='Enter')ssConnect()"
@@ -1824,32 +1823,32 @@ function openDayModal(dateStr) {
         ? dayEvents.map(ev => {
             const typeColors = { concert:'var(--accent-primary)', repetition:'var(--success)', enregistrement:'var(--warning)', meeting:'#ec4899', autre:'var(--text-secondary)' };
             const col = typeColors[ev.type] || 'var(--accent-primary)';
-            return `<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;border-left:3px solid ${col};margin-bottom:0.5rem;">
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:0.95rem;">${ev.title}</div>
-                    <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;">${ev.time||''} ${ev.location?'· '+ev.location:''}</div>
-                    ${ev.goals?`<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;font-style:italic;">${ev.goals}</div>`:''}
-                </div>
-                <span style="font-size:0.72rem;color:${col};background:rgba(99,102,241,0.1);padding:0.2rem 0.5rem;border-radius:6px;white-space:nowrap;">${ev.type}</span>
-                <div style="display:flex;gap:0.3rem;">
-                    ${!isPast ? `<button onclick="closeModal();setTimeout(()=>openModal('add-event',${ev.id}),200)" class="btn-icon" style="color:var(--accent-primary);" title="Modifier"><i class="fas fa-pen"></i></button>` : ''}
-                    <button onclick="deleteEventFromDay(${ev.id},'${dateStr}')" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>`;
+            const goalsHtml  = ev.goals ? '<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;font-style:italic;">'+ev.goals+'</div>' : '';
+            const editBtn    = !isPast ? '<button onclick="closeModal();setTimeout(()=>openModal(\'add-event\','+ev.id+'),200)" class="btn-icon" style="color:var(--accent-primary);" title="Modifier"><i class="fas fa-pen"></i></button>' : '';
+            return '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.75rem;background:var(--bg-tertiary);border-radius:10px;border-left:3px solid '+col+';margin-bottom:0.5rem;">'
+                + '<div style="flex:1;min-width:0;">'
+                + '<div style="font-weight:600;font-size:0.95rem;">'+ev.title+'</div>'
+                + '<div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px;">'+(ev.time||'')+' '+(ev.location?'· '+ev.location:'')+'</div>'
+                + goalsHtml
+                + '</div>'
+                + '<span style="font-size:0.72rem;color:'+col+';background:rgba(99,102,241,0.1);padding:0.2rem 0.5rem;border-radius:6px;white-space:nowrap;">'+ev.type+'</span>'
+                + '<div style="display:flex;gap:0.3rem;">'
+                + editBtn
+                + '<button onclick="deleteEventFromDay('+ev.id+',\''+dateStr+'\')" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>'
+                + '</div></div>';
         }).join('')
-        : `<p style="color:var(--text-secondary);font-size:0.88rem;text-align:center;padding:1rem 0;"><i class="fas fa-calendar-times" style="display:block;font-size:1.5rem;margin-bottom:0.5rem;opacity:0.3;"></i>Aucun événement ce jour</p>`;
+        : '<p style="color:var(--text-secondary);font-size:0.88rem;text-align:center;padding:1rem 0;"><i class="fas fa-calendar-times" style="display:block;font-size:1.5rem;margin-bottom:0.5rem;opacity:0.3;"></i>Aucun événement ce jour</p>';
 
     document.getElementById('modal-title').textContent = dateLabel;
-    document.getElementById('modal-body').innerHTML = `
-        <div style="margin-bottom:1rem;">${eventsHtml}</div>`;
-    
+    document.getElementById('modal-body').innerHTML = '<div style="margin-bottom:1rem;">'+eventsHtml+'</div>';
+
     const footer = document.querySelector('.modal-footer');
     footer.style.display = '';
     footer.innerHTML = isPast
-        ? `<button class="btn-secondary" onclick="closeModal()">Fermer</button>`
-        : `<button class="btn-secondary" onclick="closeModal()">Fermer</button>
-           <button class="btn-primary" onclick="closeModal();setTimeout(()=>openModalWithDate('add-event','${dateStr}'),200)"><i class="fas fa-plus"></i> Ajouter un événement</button>`;
-    
+        ? '<button class="btn-secondary" onclick="closeModal()">Fermer</button>'
+        : '<button class="btn-secondary" onclick="closeModal()">Fermer</button>'
+          + '<button class="btn-primary" onclick="closeModal();setTimeout(()=>openModalWithDate(\'add-event\',\''+dateStr+'\'),200)"><i class="fas fa-plus"></i> Ajouter un événement</button>';
+
     document.getElementById('modal').classList.add('active');
 }
 
@@ -2221,11 +2220,13 @@ function renderCaisseJournal() {
         const time = d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
         const date = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
         const txNum = txns.length - idx; // descending label
-        const lines = tx.lines.map(l=>`
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;padding:0.15rem 0;color:var(--text-secondary);">
-                <span>${l.qty > 1 ? '<span style="background:var(--accent-primary);color:white;border-radius:4px;padding:0 4px;font-size:0.7rem;margin-right:3px;">'+l.qty+'×</span>' : ''} ${l.name}</span>
-                <span style="color:var(--text-primary);font-weight:600;">${(l.price*l.qty).toFixed(2)}€</span>
-            </div>`;}).join('');
+        const txLines = tx.lines.map(l=>{
+            const qtyBadge = l.qty > 1 ? '<span style="background:var(--accent-primary);color:white;border-radius:4px;padding:0 4px;font-size:0.7rem;margin-right:3px;">'+l.qty+'×</span>' : '';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;padding:0.15rem 0;color:var(--text-secondary);">'
+                + '<span>'+qtyBadge+' '+l.name+'</span>'
+                + '<span style="color:var(--text-primary);font-weight:600;">'+(l.price*l.qty).toFixed(2)+'€</span>'
+                + '</div>';
+        }).join('');
         return `<div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;margin-bottom:0.4rem;overflow:hidden;">
             <div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.05);">
                 <div style="background:var(--accent-gradient);color:white;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">#${txNum}</div>
@@ -2235,7 +2236,7 @@ function renderCaisseJournal() {
                 <span style="font-weight:800;color:var(--success);font-size:1rem;">${tx.total.toFixed(2)}€</span>
                 <button onclick="deleteCaisseEntry(${tx.id})" class="btn-icon" style="width:22px;height:22px;font-size:0.6rem;color:var(--danger);opacity:0.4;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.4" title="Annuler / Remboursement"><i class="fas fa-rotate-left"></i></button>
             </div>
-            <div style="padding:0.35rem 0.6rem;">${lines}</div>
+            <div style="padding:0.35rem 0.6rem;">${txLines}</div>
         </div>`;
     }).join('');
 }
@@ -2910,22 +2911,24 @@ function renderGearLibraryPanel() {
     const cats = {};
     lib.forEach(item => { if (!cats[item.cat]) cats[item.cat]=[]; cats[item.cat].push(item); });
     const gearCats = getGearCategories();
-    panel.innerHTML = Object.entries(cats).map(([cat, items])=>{
-        const catDef = gearCats.find(c=>c.name===cat);
+    panel.innerHTML = Object.entries(cats).map(([cat, items]) => {
+        const catDef = gearCats.find(c => c.name === cat);
         const col = catDef ? catDef.color : '#6366f1';
-        return `<div style="margin-bottom:0.6rem;">
-            <div style="display:flex;align-items:center;gap:0.35rem;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.3rem;padding:0.15rem 0.2rem;">
-                <span style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0;display:inline-block;"></span>${cat}
-            </div>
-            ${items.map(item=>`
-                <div onclick="addGearFromLibrary('${item.id}')"
-                     style="display:flex;align-items:center;gap:0.5rem;padding:0.32rem 0.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;margin-bottom:0.22rem;cursor:pointer;font-size:0.81rem;transition:all 0.12s;"
-                     onmouseover="this.style.borderColor='var(--accent-primary)';this.style.background='var(--bg-tertiary)'"
-                     onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--bg-secondary)'">
-                    <span style="flex:1;">${item.name}</span>
-                    <i class="fas fa-plus" style="color:var(--success);font-size:0.68rem;opacity:0.7;flex-shrink:0;"></i>
-                </div>`).join('')}
-        </div>`).join('');
+        const dot = '<span style="width:6px;height:6px;border-radius:50%;background:'+col+';flex-shrink:0;display:inline-block;margin-right:4px;"></span>';
+        const itemsHtml = items.map(item =>
+            '<div onclick="addGearFromLibrary(\''+item.id+'\')"'
+            + ' style="display:flex;align-items:center;gap:0.5rem;padding:0.32rem 0.6rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:6px;margin-bottom:0.22rem;cursor:pointer;font-size:0.81rem;transition:all 0.12s;"'
+            + ' onmouseover="this.style.borderColor=\'var(--accent-primary)\';this.style.background=\'var(--bg-tertiary)\'"'
+            + ' onmouseout="this.style.borderColor=\'var(--border)\';this.style.background=\'var(--bg-secondary)\'">'
+            + '<span style="flex:1;">'+item.name+'</span>'
+            + '<i class="fas fa-plus" style="color:var(--success);font-size:0.68rem;opacity:0.7;flex-shrink:0;"></i>'
+            + '</div>'
+        ).join('');
+        return '<div style="margin-bottom:0.6rem;">'
+            + '<div style="display:flex;align-items:center;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:0.3rem;padding:0.15rem 0.2rem;">'+dot+cat+'</div>'
+            + itemsHtml
+            + '</div>';
+    }).join('');
 }
 
 async function addGearFromLibrary(gearId) {
