@@ -773,6 +773,7 @@
             <li><button class="nav-link" onclick="switchTab('checklist', this)"><i class="fas fa-clipboard-check"></i><span>Checklist Concert</span></button></li>
             <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
             <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
+            <li id="nav-admin-item" style="display:none;"><button class="nav-link" onclick="switchTab('admin', this)"><i class="fas fa-shield-halved"></i><span>Administration</span></button></li>
         </ul>
 
                 <div class="sidebar-footer">
@@ -1304,8 +1305,9 @@ async function initApp() {
                 const res = await apsFetch('renew', {});
                 if (res.ok) {
                     sessionUser    = s.displayName;
-                    sessionRole    = s.role;
+                    sessionRole    = res.role || s.role;
                     sessionExpires = res.expires;
+                    await loadDataFromServer(res.data);
                     showApp(); return;
                 }
             }
