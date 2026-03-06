@@ -2398,8 +2398,8 @@ async function exportCaisseToFinance() {
         type: 'income',
         date,
         category: 'merch',
-        paidBy: data.members[0]?.id || '',
-        splitBetween: data.members.map(m=>m.id),
+        paidBy: '',
+        splitBetween: [],
         createdAt: new Date().toISOString()
     });
     await persist();
@@ -3586,7 +3586,7 @@ function renderTransactionList() {
     let txns = [...data.transactions].sort((a,b)=>new Date(b.date)-new Date(a.date));
 
     if (transactionFilter !== 'all') {
-        txns = txns.filter(t => t.paidBy === transactionFilter || (t.splitBetween||[]).includes(transactionFilter));
+        txns = txns.filter(t => t.paidBy === transactionFilter || (t.splitBetween||[]).includes(transactionFilter) || (t.type === 'income' && !t.paidBy));
     }
 
     if (!txns.length) { c.innerHTML = emptyState('Aucune transaction','Suivez vos recettes et dépenses'); return; }
