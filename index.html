@@ -2803,6 +2803,8 @@ function renderBuilderList() {
     document.getElementById('setlist-builder-stats').innerHTML = `<i class="fas fa-clock" style="margin-right:0.4rem;color:var(--accent-primary);"></i>${setlistBuilderItems.length} titre(s) — Durée totale : ${mins}min${secs>0?' '+secs+'s':''}`;
 }
 
+let setlistEditingId = null; // null = création, sinon id de la setlist en cours d'édition
+
 async function saveSetlistBuilder() {
     const name = document.getElementById('setlist-name-input').value.trim();
     if (!name) { showToast('Donnez un nom à la setlist', true); return; }
@@ -2812,20 +2814,52 @@ async function saveSetlistBuilder() {
     songs.forEach(s=>{ if(s.duration){const p=s.duration.split(':');if(p.length===2)totalSecs+=parseInt(p[0])*60+parseInt(p[1]);} });
     const mins = Math.floor(totalSecs/60), secs = totalSecs%60;
     if (!data.savedSetlists) data.savedSetlists = [];
-    data.savedSetlists.push({
-        id: Date.now(),
-        name,
-        songIds: [...setlistBuilderItems],
-        totalTime: `${mins}:${String(secs).padStart(2,'0')}`,
-        count: songs.length,
-        createdAt: new Date().toISOString()
-    });
+    if (setlistEditingId !== null) {
+        // Mise à jour d'une setlist existante
+        const idx = data.savedSetlists.findIndex(s=>s.id===setlistEditingId);
+        if (idx !== -1) {
+            data.savedSetlists[idx] = {
+                ...data.savedSetlists[idx],
+                name,
+                songIds: [...setlistBuilderItems],
+                totalTime: mins+':'+String(secs).padStart(2,'0'),
+                count: songs.length,
+            };
+        }
+        setlistEditingId = null;
+        document.querySelector('#setlist-view-builder h3').textContent = 'Nouvelle Setlist';
+        document.querySelector('#setlist-view-builder .btn-primary[onclick]').innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+    } else {
+        data.savedSetlists.push({
+            id: Date.now(),
+            name,
+            songIds: [...setlistBuilderItems],
+            totalTime: mins+':'+String(secs).padStart(2,'0'),
+            count: songs.length,
+            createdAt: new Date().toISOString()
+        });
+    }
     setlistBuilderItems = [];
     document.getElementById('setlist-name-input').value = '';
     await persist();
     renderBuilderList();
     renderSavedSetlists();
     showToast('Setlist "' + name + '" sauvegardée ✓');
+}
+
+function editSetlist(id) {
+    const sl = (data.savedSetlists||[]).find(s=>s.id===id);
+    if (!sl) return;
+    setlistEditingId = id;
+    setlistBuilderItems = [...(sl.songIds||[])];
+    document.getElementById('setlist-name-input').value = sl.name;
+    // Update builder header to signal edit mode
+    const h3 = document.querySelector('#setlist-view-builder h3');
+    if (h3) h3.textContent = 'Modifier : ' + sl.name;
+    const saveBtn = document.querySelector('#setlist-view-builder .btn-primary[onclick]');
+    if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
+    renderBuilderList();
+    switchSetlistView('builder', document.getElementById('btn-view-build'));
 }
 
 function renderSavedSetlists() {
@@ -2842,6 +2876,7 @@ function renderSavedSetlists() {
                         <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;"><i class="fas fa-music" style="margin-right:0.3rem;"></i>${sl.count} titres <i class="fas fa-clock" style="margin:0 0.3rem;"></i>${sl.totalTime}</div>
                     </div>
                     <div style="display:flex;gap:0.3rem;">
+                        <button class="btn-icon" style="color:var(--success);" onclick="editSetlist(${sl.id})" title="Modifier les morceaux"><i class="fas fa-edit"></i></button>
                         <button class="btn-icon" style="color:var(--accent-primary);" onclick="renameSetlist(${sl.id})" title="Renommer"><i class="fas fa-pen"></i></button>
                         <button class="btn-icon" style="color:var(--danger);" onclick="deleteSetlist(${sl.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
                     </div>
