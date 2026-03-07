@@ -2841,7 +2841,10 @@ function renderSavedSetlists() {
                         <div style="font-weight:700;font-size:1rem;">${sl.name}</div>
                         <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;"><i class="fas fa-music" style="margin-right:0.3rem;"></i>${sl.count} titres <i class="fas fa-clock" style="margin:0 0.3rem;"></i>${sl.totalTime}</div>
                     </div>
-                    <button class="btn-icon" style="color:var(--danger);" onclick="deleteSetlist(${sl.id})"><i class="fas fa-trash"></i></button>
+                    <div style="display:flex;gap:0.3rem;">
+                        <button class="btn-icon" style="color:var(--accent-primary);" onclick="renameSetlist(${sl.id})" title="Renommer"><i class="fas fa-pen"></i></button>
+                        <button class="btn-icon" style="color:var(--danger);" onclick="deleteSetlist(${sl.id})" title="Supprimer"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
                     ${songs.map((s,i)=>`<span style="font-size:0.78rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.5rem;">${i+1}. ${s.title}</span>`).join('')}
@@ -2869,6 +2872,15 @@ async function deleteSetlist(id) {
     if (!confirm('Supprimer cette setlist ?')) return;
     data.savedSetlists = (data.savedSetlists||[]).filter(s=>s.id!==id);
     await persist(); renderSavedSetlists(); showToast('Setlist supprimée');
+}
+
+async function renameSetlist(id) {
+    const sl = (data.savedSetlists||[]).find(s=>s.id===id);
+    if (!sl) return;
+    const newName = prompt('Nouveau nom de la setlist :', sl.name);
+    if (!newName || !newName.trim()) return;
+    sl.name = newName.trim();
+    await persist(); renderSavedSetlists(); showToast('Setlist renommée');
 }
 
 // ══════════════════════════════════════
@@ -3074,10 +3086,11 @@ function renderChecklist() {
                     ${groups.map(grp => {
                         const grpChecked = grp.items.filter(i=>i.checked).length;
                         const grpTotal   = grp.items.length;
+                        const grpColor = grp.color || '#6366f1';
                         return `<div style="background:var(--bg-tertiary);border-radius:10px;border:1px solid var(--border);overflow:hidden;">
-                            <div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:rgba(99,102,241,0.07);border-bottom:1px solid var(--border);">
-                                <i class="fas fa-folder" style="color:var(--accent-secondary);font-size:0.8rem;flex-shrink:0;"></i>
-                                <span style="font-size:0.82rem;font-weight:700;flex:1;font-family:'Space Grotesk',sans-serif;letter-spacing:0.3px;">${grp.name}</span>
+                            <div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;background:rgba(99,102,241,0.07);border-bottom:1px solid var(--border);border-left:3px solid ${grpColor};">
+                                <input type="color" value="${grpColor}" onchange="setGroupColor('${mus.id}','${grp.id}',this.value)" title="Couleur du groupe" style="width:16px;height:16px;border:none;background:transparent;cursor:pointer;padding:0;flex-shrink:0;">
+                                <span style="font-size:0.82rem;font-weight:700;flex:1;font-family:'Space Grotesk',sans-serif;letter-spacing:0.3px;color:${grpColor};">${grp.name}</span>
                                 <span style="font-size:0.68rem;color:var(--text-secondary);background:var(--bg-secondary);padding:0.1rem 0.45rem;border-radius:10px;">${grpChecked}/${grpTotal}</span>
                                 <button onclick="renameGroup('${mus.id}','${grp.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.6rem;color:var(--accent-primary);opacity:0.7;" title="Renommer"><i class="fas fa-pen"></i></button>
                                 <button onclick="deleteGroup('${mus.id}','${grp.id}')" class="btn-icon" style="width:22px;height:22px;font-size:0.6rem;color:var(--danger);opacity:0.7;" title="Supprimer groupe"><i class="fas fa-folder-minus"></i></button>
@@ -3089,7 +3102,8 @@ function renderChecklist() {
                                         <label style="display:flex;align-items:center;gap:0.45rem;padding:0.28rem 0.15rem;cursor:pointer;border-radius:4px;transition:background 0.1s;" onmouseover="this.style.background='rgba(255,255,255,0.03)'" onmouseout="this.style.background='transparent'">
                                             <input type="checkbox" ${item.checked?'checked':''} onchange="toggleGroupItem('${mus.id}','${grp.id}','${item.id}',this.checked)" style="accent-color:var(--accent-primary);width:14px;height:14px;flex-shrink:0;">
                                             <span style="flex:1;font-size:0.82rem;${item.checked?'text-decoration:line-through;opacity:0.4;':''}">${item.name}</span>
-                                            <button onclick="deleteGroupItem('${mus.id}','${grp.id}','${item.id}')" class="btn-icon" style="width:18px;height:18px;font-size:0.55rem;color:var(--danger);opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><i class="fas fa-times"></i></button>
+                                            <button onclick="editGroupItem('${mus.id}','${grp.id}','${item.id}')" class="btn-icon" style="width:18px;height:18px;font-size:0.55rem;color:var(--accent-primary);opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0" title="Renommer"><i class="fas fa-pen"></i></button>
+                                            <button onclick="deleteGroupItem('${mus.id}','${grp.id}','${item.id}')" class="btn-icon" style="width:18px;height:18px;font-size:0.55rem;color:var(--danger);opacity:0;transition:opacity 0.15s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0" title="Supprimer"><i class="fas fa-times"></i></button>
                                         </label>`).join('')}
                                 <div style="display:flex;gap:0.35rem;margin-top:0.35rem;padding-top:0.35rem;border-top:1px solid rgba(255,255,255,0.04);">
                                     <input type="text" placeholder="Ajouter un élément libre…" id="quickadd-${mus.id}-${grp.id}"
@@ -3123,6 +3137,28 @@ async function deleteGroupItem(musId, grpId, itemId) {
     const grp = (mus.groups||[]).find(g=>g.id===grpId);
     if (!grp) return;
     grp.items = grp.items.filter(i=>i.id!==itemId);
+    await persist(); renderChecklist();
+}
+
+async function editGroupItem(musId, grpId, itemId) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    const item = grp.items.find(i=>i.id===itemId);
+    if (!item) return;
+    const newName = prompt('Renommer l\'élément :', item.name);
+    if (!newName || !newName.trim()) return;
+    item.name = newName.trim();
+    await persist(); renderChecklist(); showToast('Élément renommé');
+}
+
+async function setGroupColor(musId, grpId, color) {
+    const mus = (data.checklistMusicians||[]).find(m=>m.id===musId);
+    if (!mus) return;
+    const grp = (mus.groups||[]).find(g=>g.id===grpId);
+    if (!grp) return;
+    grp.color = color;
     await persist(); renderChecklist();
 }
 
