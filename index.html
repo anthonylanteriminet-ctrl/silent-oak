@@ -4218,13 +4218,27 @@ async function deleteMediaFile(id, driveId) {
 async function playAudio(driveId, name, cat) {
     const bar    = document.getElementById('audio-player-bar');
     const player = document.getElementById('audio-player');
-    document.getElementById('audio-player-title').textContent = name;
-    document.getElementById('audio-player-cat').textContent   = cat;
-    // URL de streaming public Drive
-    player.src = 'https://drive.google.com/uc?export=open&id=' + driveId;
+    const titleEl = document.getElementById('audio-player-title');
+    const catEl   = document.getElementById('audio-player-cat');
+    titleEl.textContent = name;
+    catEl.textContent   = '⏳ Chargement…';
     bar.style.display = 'flex';
-    player.load();
-    player.play().catch(function() {});
+    try {
+        const res = await apsFetch('get_audio_data', { fileId: driveId });
+        if (!res.ok) { showToast('Impossible de lire ce fichier', true); return; }
+        // Decode base64 → Blob → object URL
+        const binary = atob(res.base64);
+        const bytes  = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const blob   = new Blob([bytes], { type: res.mimeType || 'audio/mpeg' });
+        const url    = URL.createObjectURL(blob);
+        if (player._blobUrl) URL.revokeObjectURL(player._blobUrl);
+        player._blobUrl = url;
+        player.src = url;
+        catEl.textContent = cat;
+        player.load();
+        player.play().catch(function() {});
+    } catch(e) { showToast('Erreur lecture : ' + e.message, true); catEl.textContent = cat; }
 }
 
 function closeAudioPlayer() {
