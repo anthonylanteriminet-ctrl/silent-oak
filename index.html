@@ -4028,7 +4028,8 @@ function openCommunityUpload() {
         contactOptions += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;"><input type="checkbox" value="' + ct.id + '" class="comm-contact-cb"> ' + ct.name + '</label>';
     });
     document.getElementById('modal-title').textContent = 'Ajouter un fichier';
-    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier</label><input id="comm-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.zip"></div>'
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier</label><input id="comm-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.zip" onchange="autoFillCommName(this)"></div>'
+        + '<div class="form-group"><label>Nom affiché</label><input id="comm-display-name" type="text" placeholder="Ex: Rider technique 2025"></div>'
         + '<div class="form-group"><label>Catégorie</label><select id="comm-cat"><option value="rider">🎚 Rider</option><option value="fiche">📋 Fiche technique</option><option value="contrat">📄 Contrat</option><option value="presse">📰 Presse</option><option value="autre">📁 Autre</option></select></div>'
         + '<div class="form-group"><label>Note (optionnel)</label><input id="comm-note" type="text" placeholder="Ex: Rider 2024, version finale…"></div>'
         + '<div class="form-group"><label>Lier à des contacts</label><div style="max-height:150px;overflow-y:auto;background:var(--bg-tertiary);border-radius:8px;padding:0.5rem 0.75rem;">' + (contactOptions || '<span style="color:var(--text-secondary);font-size:0.85rem;">Aucun contact enregistré</span>') + '</div></div>'
@@ -4047,12 +4048,15 @@ async function uploadCommunityFile() {
     if (!fileInput.files.length) { showToast('Sélectionnez un fichier', true); return; }
     const file = fileInput.files[0];
     document.getElementById('comm-upload-progress').style.display = '';
+    const rawNameC  = (document.getElementById('comm-display-name').value || '').trim();
+    const extC      = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
+    const finalNameC = rawNameC ? rawNameC + extC : file.name;
     try {
         const base64 = await fileToBase64(file);
-        const res = await apsFetch('upload_file', { fileName: file.name, mimeType: file.type, base64: base64, folder: 'documents' });
+        const res = await apsFetch('upload_file', { fileName: finalNameC, mimeType: file.type, base64: base64, folder: 'documents' });
         if (!res.ok) { showToast('Erreur upload : ' + res.reason, true); return; }
         if (!data.communityDocs) data.communityDocs = [];
-        data.communityDocs.push({ id: Date.now(), driveId: res.id, name: file.name, cat: cat, note: note, url: res.url, contactIds: contactIds, createdAt: new Date().toISOString() });
+        data.communityDocs.push({ id: Date.now(), driveId: res.id, name: finalNameC, cat: cat, note: note, url: res.url, contactIds: contactIds, createdAt: new Date().toISOString() });
         await persist();
         closeModal(); renderCommunity(); showToast('Fichier ajouté ✓');
     } catch(e) { showToast('Erreur : ' + e.message, true); }
@@ -4172,7 +4176,8 @@ function renderMedia() {
 
 function openMediaUpload() {
     document.getElementById('modal-title').textContent = 'Ajouter un fichier audio';
-    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier audio</label><input id="media-file-input" type="file" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a"></div>'
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier audio</label><input id="media-file-input" type="file" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a" onchange="autoFillMediaName(this)"></div>'
+        + '<div class="form-group"><label>Nom affiché</label><input id="media-display-name" type="text" placeholder="Ex: Musique démo 2"></div>'
         + '<div class="form-group"><label>Catégorie</label><select id="media-cat"><option value="demo">🎵 Démo</option><option value="diffusion">📻 Diffusion</option><option value="live">🎤 Live</option><option value="autre">🎧 Autre</option></select></div>'
         + '<div class="form-group"><label>Note (optionnel)</label><input id="media-note" type="text" placeholder="Ex: Maquette mars 2025…"></div>'
         + '<div id="media-upload-progress" style="display:none;margin-top:0.5rem;font-size:0.85rem;color:var(--accent-primary);"><i class="fas fa-spinner fa-spin"></i> Upload en cours…</div>';
@@ -4189,12 +4194,15 @@ async function uploadMediaFile() {
     if (!fileInput.files.length) { showToast('Sélectionnez un fichier audio', true); return; }
     const file = fileInput.files[0];
     document.getElementById('media-upload-progress').style.display = '';
+    const rawName   = (document.getElementById('media-display-name').value || '').trim();
+    const ext       = file.name.includes('.') ? '.' + file.name.split('.').pop() : '';
+    const finalName = rawName ? rawName + ext : file.name;
     try {
         const base64 = await fileToBase64(file);
-        const res = await apsFetch('upload_file', { fileName: file.name, mimeType: file.type, base64: base64, folder: 'audios' });
+        const res = await apsFetch('upload_file', { fileName: finalName, mimeType: file.type, base64: base64, folder: 'audios' });
         if (!res.ok) { showToast('Erreur upload : ' + res.reason, true); return; }
         if (!data.mediaFiles) data.mediaFiles = [];
-        data.mediaFiles.push({ id: Date.now(), driveId: res.id, name: file.name, cat: cat, note: note, url: res.url, createdAt: new Date().toISOString() });
+        data.mediaFiles.push({ id: Date.now(), driveId: res.id, name: finalName, cat: cat, note: note, url: res.url, createdAt: new Date().toISOString() });
         await persist();
         closeModal(); renderMedia(); showToast('Audio ajouté ✓');
     } catch(e) { showToast('Erreur : ' + e.message, true); }
@@ -4208,17 +4216,15 @@ async function deleteMediaFile(id, driveId) {
 }
 
 async function playAudio(driveId, name, cat) {
-    try {
-        const res = await apsFetch('get_audio_url', { fileId: driveId });
-        if (!res.ok) { showToast('Impossible de lire ce fichier', true); return; }
-        const bar    = document.getElementById('audio-player-bar');
-        const player = document.getElementById('audio-player');
-        document.getElementById('audio-player-title').textContent = name;
-        document.getElementById('audio-player-cat').textContent   = cat;
-        player.src = res.url;
-        bar.style.display = 'flex';
-        player.play().catch(function() {});
-    } catch(e) { showToast('Erreur lecture : ' + e.message, true); }
+    const bar    = document.getElementById('audio-player-bar');
+    const player = document.getElementById('audio-player');
+    document.getElementById('audio-player-title').textContent = name;
+    document.getElementById('audio-player-cat').textContent   = cat;
+    // URL de streaming public Drive
+    player.src = 'https://drive.google.com/uc?export=open&id=' + driveId;
+    bar.style.display = 'flex';
+    player.load();
+    player.play().catch(function() {});
 }
 
 function closeAudioPlayer() {
@@ -4234,6 +4240,21 @@ function fileToBase64(file) {
         r.onerror = function() { reject(new Error('Lecture fichier échouée')); };
         r.readAsDataURL(file);
     });
+}
+
+function autoFillMediaName(input) {
+    const nameEl = document.getElementById('media-display-name');
+    if (nameEl && !nameEl.value && input.files.length) {
+        const raw = input.files[0].name;
+        nameEl.value = raw.includes('.') ? raw.split('.').slice(0,-1).join('.') : raw;
+    }
+}
+function autoFillCommName(input) {
+    const nameEl = document.getElementById('comm-display-name');
+    if (nameEl && !nameEl.value && input.files.length) {
+        const raw = input.files[0].name;
+        nameEl.value = raw.includes('.') ? raw.split('.').slice(0,-1).join('.') : raw;
+    }
 }
 
 // ── BOOT ──
