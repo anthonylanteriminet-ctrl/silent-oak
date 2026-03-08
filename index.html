@@ -773,6 +773,8 @@
             <li><button class="nav-link" onclick="switchTab('checklist', this)"><i class="fas fa-clipboard-check"></i><span>Checklist Concert</span></button></li>
             <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
             <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('community', this)"><i class="fas fa-folder-open"></i><span>Community</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('media', this)"><i class="fas fa-headphones"></i><span>Médias</span></button></li>
             <li id="nav-admin-item" style="display:none;"><button class="nav-link" onclick="switchTab('admin', this)"><i class="fas fa-shield-halved"></i><span>Administration</span></button></li>
         </ul>
 
@@ -1191,6 +1193,52 @@
                 </div>
             </div>
         </div>
+
+        <!-- ══ COMMUNITY MANAGEMENT ══ -->
+        <div id="community" class="tab-content">
+            <div class="header">
+                <h2>Community Management</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openCommunityUpload()"><i class="fas fa-upload"></i> Ajouter un fichier</button>
+                    <button class="btn-secondary" onclick="openSendEmail()" style="font-size:0.85rem;"><i class="fas fa-envelope"></i> Envoyer un mail</button>
+                </div>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+                <button class="btn-secondary community-cat-btn active" onclick="filterCommunity('all',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">Tous</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('rider',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎚 Riders</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('fiche',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📋 Fiches techniques</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('contrat',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📄 Contrats</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('presse',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📰 Presse</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('autre',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📁 Autres</button>
+            </div>
+            <div id="community-list"></div>
+        </div>
+
+        <!-- ══ MEDIAS ══ -->
+        <div id="media" class="tab-content">
+            <div class="header">
+                <h2>Médias</h2>
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openMediaUpload()"><i class="fas fa-upload"></i> Ajouter un audio</button>
+                </div>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+                <button class="btn-secondary media-cat-btn active" onclick="filterMedia('all',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">Tous</button>
+                <button class="btn-secondary media-cat-btn" onclick="filterMedia('demo',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎵 Démos</button>
+                <button class="btn-secondary media-cat-btn" onclick="filterMedia('diffusion',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📻 Diffusion</button>
+                <button class="btn-secondary media-cat-btn" onclick="filterMedia('live',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎤 Live</button>
+                <button class="btn-secondary media-cat-btn" onclick="filterMedia('autre',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎧 Autres</button>
+            </div>
+            <div id="media-list" style="padding-bottom:5rem;"></div>
+            <div id="audio-player-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--border);padding:0.75rem 1.5rem;z-index:200;align-items:center;gap:1rem;">
+                <div style="flex:1;min-width:0;">
+                    <div id="audio-player-title" style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+                    <div id="audio-player-cat" style="font-size:0.72rem;color:var(--text-secondary);"></div>
+                </div>
+                <audio id="audio-player" controls style="flex:2;height:36px;min-width:200px;max-width:400px;accent-color:var(--accent-primary);"></audio>
+                <button onclick="closeAudioPlayer()" class="btn-icon" style="color:var(--text-secondary);font-size:1rem;flex-shrink:0;"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
     </main>
 </div>
 
@@ -1231,6 +1279,12 @@
             </button>
             <button class="bottom-nav-btn" onclick="switchTabMobile('finance',this)">
                 <i class="fas fa-wallet"></i>Finance
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('community',this)">
+                <i class="fas fa-folder-open"></i>Community
+            </button>
+            <button class="bottom-nav-btn" onclick="switchTabMobile('media',this)">
+                <i class="fas fa-headphones"></i>Médias
             </button>
             <button class="bottom-nav-btn" id="bnav-admin-btn" style="display:none;" onclick="switchTabMobile('admin',this)">
                 <i class="fas fa-shield-alt" style="color:var(--warning);"></i><span style="color:var(--warning);">Admin</span>
@@ -1276,7 +1330,7 @@ const HEARTBEAT_MS    = 60 * 1000;        // heartbeat toutes les 60s
 // ═══════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════
-let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[], userSettings:{} };
+let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[], userSettings:{}, communityDocs:[], mediaFiles:[] };
 let currentMonth  = new Date();
 let contactFilter = 'all';
 let modalType = '';
@@ -1542,7 +1596,7 @@ async function autoDisconnect() {
 // ═══════════════════════════════════════════════════════════
 // ── fetch helper (via Cloudflare proxy) ──
 async function apsFetch(action, body) {
-    const POST_ACTIONS = ['save','create_user','delete_user','change_password','release'];
+    const POST_ACTIONS = ['save','create_user','delete_user','change_password','release','upload_file','delete_file','send_email'];
     if (POST_ACTIONS.includes(action)) {
         const payload = { action, token: sessionToken, ...(body||{}) };
         const res = await fetch(SCRIPT_URL, {
@@ -1649,6 +1703,8 @@ function switchTab(name, btn) {
     if (name === 'checklist') renderChecklist();
     if (name === 'setlist') renderSavedSetlists();
     if (name === 'admin') { renderAdminUsers(); updateSessionUI(); }
+    if (name === 'community') renderCommunity();
+    if (name === 'media') renderMedia();
     if (name === 'stock') { renderStock(); if (currentStockView==='merch') { renderMerchButtons(); renderCaisseJournal(); } }
     if (window.innerWidth <= 1024) document.getElementById('sidebar').classList.remove('open');
 }
@@ -3764,6 +3820,8 @@ function switchTabMobile(name, btn) {
     if (name === 'checklist') renderChecklist();
     if (name === 'setlist') renderSavedSetlists();
     if (name === 'admin') { renderAdminUsers(); updateSessionUI(); }
+    if (name === 'community') renderCommunity();
+    if (name === 'media') renderMedia();
     closeSidebarMobile();
 }
 
@@ -3909,6 +3967,273 @@ async function adminChangeMyPassword() {
             showToast(msgs[res.reason] || 'Erreur : ' + res.reason, true);
         }
     } catch(e) { showToast('Erreur de connexion', true); }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  COMMUNITY MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+
+let communityFilter = 'all';
+
+function filterCommunity(cat, btn) {
+    communityFilter = cat;
+    document.querySelectorAll('.community-cat-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderCommunity();
+}
+
+function renderCommunity() {
+    const el = document.getElementById('community-list');
+    if (!el) return;
+    const docs = (data.communityDocs || []).filter(d => communityFilter === 'all' || d.cat === communityFilter);
+    if (!docs.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:3rem 1rem;"><i class="fas fa-folder-open"></i><h3>Aucun fichier</h3><p>Ajoutez des fichiers via le bouton ci-dessus</p></div>';
+        return;
+    }
+    const catLabels = { rider:'🎚 Rider', fiche:'📋 Fiche technique', contrat:'📄 Contrat', presse:'📰 Presse', autre:'📁 Autre' };
+    const catIcons  = { rider:'🎚', fiche:'📋', contrat:'📄', presse:'📰', autre:'📁' };
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">';
+    docs.forEach(function(doc) {
+        const contactNames = (doc.contactIds || []).map(function(id) {
+            const ct = (data.contacts || []).find(function(c) { return c.id === id; });
+            return ct ? ct.name : null;
+        }).filter(Boolean);
+        const icon = catIcons[doc.cat] || '📁';
+        const catLabel = catLabels[doc.cat] || doc.cat;
+        html += '<div class="card" style="padding:1rem;">';
+        html += '<div style="display:flex;align-items:flex-start;gap:0.75rem;">';
+        html += '<div style="width:40px;height:40px;border-radius:10px;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">' + icon + '</div>';
+        html += '<div style="flex:1;min-width:0;">';
+        html += '<div style="font-weight:700;font-size:0.9rem;word-break:break-word;">' + doc.name + '</div>';
+        html += '<div style="font-size:0.75rem;color:var(--accent-primary);margin-top:2px;">' + catLabel + '</div>';
+        if (doc.note) html += '<div style="font-size:0.75rem;color:var(--text-secondary);margin-top:4px;font-style:italic;">' + doc.note + '</div>';
+        if (contactNames.length) html += '<div style="font-size:0.72rem;color:var(--success);margin-top:4px;"><i class="fas fa-user" style="margin-right:0.3rem;"></i>' + contactNames.join(', ') + '</div>';
+        html += '<div style="font-size:0.68rem;color:var(--text-secondary);margin-top:4px;">' + new Date(doc.createdAt).toLocaleDateString('fr-FR') + '</div>';
+        html += '</div></div>';
+        html += '<div style="display:flex;gap:0.4rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);">';
+        html += '<a href="' + doc.url + '" target="_blank" class="btn-secondary" style="flex:1;text-align:center;font-size:0.78rem;padding:0.4rem;text-decoration:none;"><i class="fas fa-download"></i> Télécharger</a>';
+        html += '<button data-fid="' + doc.driveId + '" onclick="openSendEmail(this.dataset.fid)" class="btn-secondary" style="font-size:0.78rem;padding:0.4rem 0.6rem;" title="Envoyer par mail"><i class="fas fa-envelope"></i></button>';
+        html += '<button data-did="' + doc.id + '" onclick="editCommunityDoc(this.dataset.did)" class="btn-icon" style="color:var(--accent-primary);" title="Modifier"><i class="fas fa-pen"></i></button>';
+        html += '<button data-did="' + doc.id + '" data-drid="' + doc.driveId + '" onclick="deleteCommunityDoc(this.dataset.did,this.dataset.drid)" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>';
+        html += '</div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function openCommunityUpload() {
+    let contactOptions = '';
+    (data.contacts || []).forEach(function(ct) {
+        contactOptions += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;"><input type="checkbox" value="' + ct.id + '" class="comm-contact-cb"> ' + ct.name + '</label>';
+    });
+    document.getElementById('modal-title').textContent = 'Ajouter un fichier';
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier</label><input id="comm-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.zip"></div>'
+        + '<div class="form-group"><label>Catégorie</label><select id="comm-cat"><option value="rider">🎚 Rider</option><option value="fiche">📋 Fiche technique</option><option value="contrat">📄 Contrat</option><option value="presse">📰 Presse</option><option value="autre">📁 Autre</option></select></div>'
+        + '<div class="form-group"><label>Note (optionnel)</label><input id="comm-note" type="text" placeholder="Ex: Rider 2024, version finale…"></div>'
+        + '<div class="form-group"><label>Lier à des contacts</label><div style="max-height:150px;overflow-y:auto;background:var(--bg-tertiary);border-radius:8px;padding:0.5rem 0.75rem;">' + (contactOptions || '<span style="color:var(--text-secondary);font-size:0.85rem;">Aucun contact enregistré</span>') + '</div></div>'
+        + '<div id="comm-upload-progress" style="display:none;margin-top:0.5rem;font-size:0.85rem;color:var(--accent-primary);"><i class="fas fa-spinner fa-spin"></i> Upload en cours…</div>';
+    document.querySelector('.modal-footer').style.display = '';
+    document.querySelector('.modal-footer .btn-primary').onclick = uploadCommunityFile;
+    document.querySelector('.modal-footer .btn-primary').innerHTML = '<i class="fas fa-upload"></i> Envoyer';
+    document.getElementById('modal').classList.add('active');
+}
+
+async function uploadCommunityFile() {
+    const fileInput = document.getElementById('comm-file-input');
+    const cat  = document.getElementById('comm-cat').value;
+    const note = (document.getElementById('comm-note').value || '').trim();
+    const contactIds = Array.from(document.querySelectorAll('.comm-contact-cb:checked')).map(function(cb) { return parseInt(cb.value); });
+    if (!fileInput.files.length) { showToast('Sélectionnez un fichier', true); return; }
+    const file = fileInput.files[0];
+    document.getElementById('comm-upload-progress').style.display = '';
+    try {
+        const base64 = await fileToBase64(file);
+        const res = await apsFetch('upload_file', { fileName: file.name, mimeType: file.type, base64: base64, folder: 'documents' });
+        if (!res.ok) { showToast('Erreur upload : ' + res.reason, true); return; }
+        if (!data.communityDocs) data.communityDocs = [];
+        data.communityDocs.push({ id: Date.now(), driveId: res.id, name: file.name, cat: cat, note: note, url: res.url, contactIds: contactIds, createdAt: new Date().toISOString() });
+        await persist();
+        closeModal(); renderCommunity(); showToast('Fichier ajouté ✓');
+    } catch(e) { showToast('Erreur : ' + e.message, true); }
+}
+
+async function deleteCommunityDoc(id, driveId) {
+    if (!confirm('Supprimer ce fichier ?')) return;
+    try { await apsFetch('delete_file', { fileId: driveId }); } catch(e) {}
+    data.communityDocs = (data.communityDocs || []).filter(function(d) { return String(d.id) !== String(id); });
+    await persist(); renderCommunity(); showToast('Fichier supprimé');
+}
+
+function editCommunityDoc(id) {
+    const doc = (data.communityDocs || []).find(function(d) { return String(d.id) === String(id); });
+    if (!doc) return;
+    let contactOptions = '';
+    (data.contacts || []).forEach(function(ct) {
+        const checked = (doc.contactIds || []).includes(ct.id) ? ' checked' : '';
+        contactOptions += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;"><input type="checkbox" value="' + ct.id + '" class="comm-contact-cb"' + checked + '> ' + ct.name + '</label>';
+    });
+    const cats = ['rider','fiche','contrat','presse','autre'];
+    const catNames = { rider:'🎚 Rider', fiche:'📋 Fiche technique', contrat:'📄 Contrat', presse:'📰 Presse', autre:'📁 Autre' };
+    let catSel = '';
+    cats.forEach(function(v) { catSel += '<option value="' + v + '"' + (doc.cat === v ? ' selected' : '') + '>' + catNames[v] + '</option>'; });
+    document.getElementById('modal-title').textContent = 'Modifier le fichier';
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Catégorie</label><select id="comm-cat">' + catSel + '</select></div>'
+        + '<div class="form-group"><label>Note</label><input id="comm-note" type="text" value="' + (doc.note || '') + '"></div>'
+        + '<div class="form-group"><label>Contacts liés</label><div style="max-height:150px;overflow-y:auto;background:var(--bg-tertiary);border-radius:8px;padding:0.5rem 0.75rem;">' + (contactOptions || '<span style="color:var(--text-secondary);font-size:0.85rem;">Aucun contact</span>') + '</div></div>';
+    document.querySelector('.modal-footer').style.display = '';
+    document.querySelector('.modal-footer .btn-primary').onclick = async function() {
+        doc.cat  = document.getElementById('comm-cat').value;
+        doc.note = (document.getElementById('comm-note').value || '').trim();
+        doc.contactIds = Array.from(document.querySelectorAll('.comm-contact-cb:checked')).map(function(cb) { return parseInt(cb.value); });
+        await persist(); closeModal(); renderCommunity(); showToast('Modifié ✓');
+    };
+    document.querySelector('.modal-footer .btn-primary').innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+    document.getElementById('modal').classList.add('active');
+}
+
+function openSendEmail(preselectedFileId) {
+    let docOptions = '';
+    (data.communityDocs || []).forEach(function(d) {
+        const checked = preselectedFileId === d.driveId ? ' checked' : '';
+        docOptions += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;"><input type="checkbox" value="' + d.driveId + '" class="mail-file-cb"' + checked + '> ' + d.name + '</label>';
+    });
+    let contactOpts = '<option value="">— Choisir un contact —</option>';
+    (data.contacts || []).filter(function(c) { return c.email; }).forEach(function(c) {
+        contactOpts += '<option value="' + c.email + '">' + c.name + ' &lt;' + c.email + '&gt;</option>';
+    });
+    const contactSel = contactOpts !== '<option value="">— Choisir un contact —</option>'
+        ? '<select id="mail-contact-pick" onchange="document.getElementById(\'mail-to\').value=this.value" style="flex:1;">' + contactOpts + '</select>'
+        : '';
+    document.getElementById('modal-title').textContent = 'Envoyer un mail';
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Destinataire</label><div style="display:flex;gap:0.5rem;"><input id="mail-to" type="email" placeholder="email@exemple.com" style="flex:1;">' + contactSel + '</div></div>'
+        + '<div class="form-group"><label>Objet</label><input id="mail-subject" type="text" placeholder="Objet du mail"></div>'
+        + '<div class="form-group"><label>Message</label><textarea id="mail-body" rows="4" placeholder="Corps du mail…" style="width:100%;padding:0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;resize:vertical;"></textarea></div>'
+        + (docOptions ? '<div class="form-group"><label>Pièces jointes</label><div style="max-height:150px;overflow-y:auto;background:var(--bg-tertiary);border-radius:8px;padding:0.5rem 0.75rem;">' + docOptions + '</div></div>' : '')
+        + '<div id="mail-progress" style="display:none;font-size:0.85rem;color:var(--accent-primary);"><i class="fas fa-spinner fa-spin"></i> Envoi en cours…</div>';
+    document.querySelector('.modal-footer').style.display = '';
+    document.querySelector('.modal-footer .btn-primary').onclick = sendEmail;
+    document.querySelector('.modal-footer .btn-primary').innerHTML = '<i class="fas fa-paper-plane"></i> Envoyer';
+    document.getElementById('modal').classList.add('active');
+}
+
+async function sendEmail() {
+    const to      = (document.getElementById('mail-to').value || '').trim();
+    const subject = (document.getElementById('mail-subject').value || '').trim();
+    const body    = (document.getElementById('mail-body').value || '').trim();
+    const fileIds = Array.from(document.querySelectorAll('.mail-file-cb:checked')).map(function(cb) { return cb.value; });
+    if (!to || !subject) { showToast('Destinataire et objet requis', true); return; }
+    document.getElementById('mail-progress').style.display = '';
+    try {
+        const res = await apsFetch('send_email', { to: to, subject: subject, body: body, fileIds: fileIds });
+        if (res.ok) { closeModal(); showToast('Mail envoyé ✓'); }
+        else showToast('Erreur : ' + res.reason, true);
+    } catch(e) { showToast('Erreur : ' + e.message, true); }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MEDIAS
+// ══════════════════════════════════════════════════════════════
+
+let mediaFilter = 'all';
+
+function filterMedia(cat, btn) {
+    mediaFilter = cat;
+    document.querySelectorAll('.media-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    renderMedia();
+}
+
+function renderMedia() {
+    const el = document.getElementById('media-list');
+    if (!el) return;
+    const files = (data.mediaFiles || []).filter(function(f) { return mediaFilter === 'all' || f.cat === mediaFilter; });
+    if (!files.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:3rem 1rem;"><i class="fas fa-headphones"></i><h3>Aucun fichier audio</h3><p>Ajoutez des fichiers via le bouton ci-dessus</p></div>';
+        return;
+    }
+    const catLabels = { demo:'🎵 Démo', diffusion:'📻 Diffusion', live:'🎤 Live', autre:'🎧 Autre' };
+    let html = '<div style="display:flex;flex-direction:column;gap:0.6rem;">';
+    files.forEach(function(f) {
+        html += '<div class="card" style="padding:0.85rem 1rem;display:flex;align-items:center;gap:1rem;">';
+        html += '<button data-drid="' + f.driveId + '" data-nm="' + f.name.replace(/"/g, '&quot;') + '" data-ct="' + (f.cat || '') + '" onclick="playAudio(this.dataset.drid,this.dataset.nm,this.dataset.ct)" style="width:40px;height:40px;border-radius:50%;background:var(--accent-gradient);border:none;color:white;cursor:pointer;flex-shrink:0;font-size:1rem;display:flex;align-items:center;justify-content:center;"><i class="fas fa-play"></i></button>';
+        html += '<div style="flex:1;min-width:0;">';
+        html += '<div style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + f.name + '</div>';
+        html += '<div style="font-size:0.75rem;color:var(--accent-primary);margin-top:2px;">' + (catLabels[f.cat] || f.cat) + (f.note ? ' · ' + f.note : '') + '</div>';
+        html += '<div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;">' + new Date(f.createdAt).toLocaleDateString('fr-FR') + '</div>';
+        html += '</div>';
+        html += '<a href="' + f.url + '" target="_blank" class="btn-icon" style="color:var(--text-secondary);" title="Télécharger"><i class="fas fa-download"></i></a>';
+        html += '<button data-fid="' + f.id + '" data-drid="' + f.driveId + '" onclick="deleteMediaFile(this.dataset.fid,this.dataset.drid)" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>';
+        html += '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function openMediaUpload() {
+    document.getElementById('modal-title').textContent = 'Ajouter un fichier audio';
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier audio</label><input id="media-file-input" type="file" accept="audio/*,.mp3,.wav,.flac,.aac,.ogg,.m4a"></div>'
+        + '<div class="form-group"><label>Catégorie</label><select id="media-cat"><option value="demo">🎵 Démo</option><option value="diffusion">📻 Diffusion</option><option value="live">🎤 Live</option><option value="autre">🎧 Autre</option></select></div>'
+        + '<div class="form-group"><label>Note (optionnel)</label><input id="media-note" type="text" placeholder="Ex: Maquette mars 2025…"></div>'
+        + '<div id="media-upload-progress" style="display:none;margin-top:0.5rem;font-size:0.85rem;color:var(--accent-primary);"><i class="fas fa-spinner fa-spin"></i> Upload en cours…</div>';
+    document.querySelector('.modal-footer').style.display = '';
+    document.querySelector('.modal-footer .btn-primary').onclick = uploadMediaFile;
+    document.querySelector('.modal-footer .btn-primary').innerHTML = '<i class="fas fa-upload"></i> Envoyer';
+    document.getElementById('modal').classList.add('active');
+}
+
+async function uploadMediaFile() {
+    const fileInput = document.getElementById('media-file-input');
+    const cat  = document.getElementById('media-cat').value;
+    const note = (document.getElementById('media-note').value || '').trim();
+    if (!fileInput.files.length) { showToast('Sélectionnez un fichier audio', true); return; }
+    const file = fileInput.files[0];
+    document.getElementById('media-upload-progress').style.display = '';
+    try {
+        const base64 = await fileToBase64(file);
+        const res = await apsFetch('upload_file', { fileName: file.name, mimeType: file.type, base64: base64, folder: 'audios' });
+        if (!res.ok) { showToast('Erreur upload : ' + res.reason, true); return; }
+        if (!data.mediaFiles) data.mediaFiles = [];
+        data.mediaFiles.push({ id: Date.now(), driveId: res.id, name: file.name, cat: cat, note: note, url: res.url, createdAt: new Date().toISOString() });
+        await persist();
+        closeModal(); renderMedia(); showToast('Audio ajouté ✓');
+    } catch(e) { showToast('Erreur : ' + e.message, true); }
+}
+
+async function deleteMediaFile(id, driveId) {
+    if (!confirm('Supprimer ce fichier audio ?')) return;
+    try { await apsFetch('delete_file', { fileId: driveId }); } catch(e) {}
+    data.mediaFiles = (data.mediaFiles || []).filter(function(f) { return String(f.id) !== String(id); });
+    await persist(); renderMedia(); showToast('Fichier supprimé');
+}
+
+async function playAudio(driveId, name, cat) {
+    try {
+        const res = await apsFetch('get_audio_url', { fileId: driveId });
+        if (!res.ok) { showToast('Impossible de lire ce fichier', true); return; }
+        const bar    = document.getElementById('audio-player-bar');
+        const player = document.getElementById('audio-player');
+        document.getElementById('audio-player-title').textContent = name;
+        document.getElementById('audio-player-cat').textContent   = cat;
+        player.src = res.url;
+        bar.style.display = 'flex';
+        player.play().catch(function() {});
+    } catch(e) { showToast('Erreur lecture : ' + e.message, true); }
+}
+
+function closeAudioPlayer() {
+    const player = document.getElementById('audio-player');
+    player.pause(); player.src = '';
+    document.getElementById('audio-player-bar').style.display = 'none';
+}
+
+function fileToBase64(file) {
+    return new Promise(function(resolve, reject) {
+        const r = new FileReader();
+        r.onload  = function() { resolve(r.result.split(',')[1]); };
+        r.onerror = function() { reject(new Error('Lecture fichier échouée')); };
+        r.readAsDataURL(file);
+    });
 }
 
 // ── BOOT ──
