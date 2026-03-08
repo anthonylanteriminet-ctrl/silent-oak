@@ -4222,8 +4222,8 @@ async function playAudio(driveId, name, cat) {
     const catEl   = document.getElementById('audio-player-cat');
     titleEl.textContent = name;
     catEl.textContent   = cat;
-    // URL directe Drive public — confirm=t bypass la page de confirmation Google
-    player.src = 'https://drive.google.com/uc?export=download&id=' + driveId + '&confirm=t';
+    // Passe par le Worker Cloudflare qui proxy le fichier Drive sans CORB
+    player.src = SCRIPT_URL + '/audio?id=' + driveId;
     bar.style.display = 'flex';
     player.load();
     player.play().catch(function() {});
