@@ -4223,10 +4223,21 @@ async function playAudio(driveId, name, cat) {
     titleEl.textContent = name;
     catEl.textContent   = cat;
     // Passe par le Worker Cloudflare qui proxy le fichier Drive sans CORB
-    player.src = SCRIPT_URL + '/audio?id=' + driveId;
+    // fetch manuel pour contrôler credentials + créer blob URL
     bar.style.display = 'flex';
-    player.load();
-    player.play().catch(function() {});
+    catEl.textContent = '⏳ Chargement…';
+    try {
+        const res = await fetch(SCRIPT_URL + '/audio?id=' + driveId, { credentials: 'omit' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+        if (player._blobUrl) URL.revokeObjectURL(player._blobUrl);
+        player._blobUrl = url;
+        player.src = url;
+        catEl.textContent = cat;
+        player.load();
+        player.play().catch(function() {});
+    } catch(e) { showToast('Erreur lecture : ' + e.message, true); catEl.textContent = cat; }
 }
 
 function closeAudioPlayer() {
