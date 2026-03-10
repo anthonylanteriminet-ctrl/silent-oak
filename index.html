@@ -774,7 +774,7 @@
             <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
             <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
             <li><button class="nav-link" onclick="switchTab('community', this)"><i class="fas fa-folder-open"></i><span>Community</span></button></li>
-            <li><button class="nav-link" onclick="switchTab('media', this)"><i class="fas fa-headphones"></i><span>Médias</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('media', this)"><i class="fas fa-headphones"></i><span>Médias & Textes</span></button></li>
             <li id="nav-admin-item" style="display:none;"><button class="nav-link" onclick="switchTab('admin', this)"><i class="fas fa-shield-halved"></i><span>Administration</span></button></li>
         </ul>
 
@@ -1214,22 +1214,47 @@
             <div id="community-list"></div>
         </div>
 
-        <!-- ══ MEDIAS ══ -->
+        <!-- ══ MEDIAS & TEXTES ══ -->
         <div id="media" class="tab-content">
             <div class="header">
-                <h2>Médias</h2>
-                <div class="header-actions">
-                    <button class="btn-primary" onclick="openMediaUpload()"><i class="fas fa-upload"></i> Ajouter un audio</button>
+                <h2>Médias & Textes</h2>
+            </div>
+            <!-- Sous-onglets -->
+            <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border);padding-bottom:0.75rem;">
+                <button id="media-tab-btn-audio" onclick="switchMediaSection('audio')" style="padding:0.5rem 1.1rem;background:var(--accent-gradient);color:white;border:none;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;font-family:inherit;"><i class="fas fa-headphones" style="margin-right:0.4rem;"></i>Audios</button>
+                <button id="media-tab-btn-lyrics" onclick="switchMediaSection('lyrics')" style="padding:0.5rem 1.1rem;background:transparent;color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-size:0.85rem;cursor:pointer;font-family:inherit;"><i class="fas fa-file-alt" style="margin-right:0.4rem;"></i>Paroles & Textes</button>
+            </div>
+
+            <!-- Section Audios -->
+            <div id="media-section-audio">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button class="btn-secondary media-cat-btn active" onclick="filterMedia('all',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">Tous</button>
+                        <button class="btn-secondary media-cat-btn" onclick="filterMedia('demo',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎵 Démos</button>
+                        <button class="btn-secondary media-cat-btn" onclick="filterMedia('diffusion',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📻 Diffusion</button>
+                        <button class="btn-secondary media-cat-btn" onclick="filterMedia('live',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎤 Live</button>
+                        <button class="btn-secondary media-cat-btn" onclick="filterMedia('autre',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎧 Autres</button>
+                    </div>
+                    <button class="btn-primary" onclick="openMediaUpload()" style="white-space:nowrap;"><i class="fas fa-upload"></i> Ajouter</button>
                 </div>
+                <div id="media-list" style="padding-bottom:5rem;"></div>
             </div>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
-                <button class="btn-secondary media-cat-btn active" onclick="filterMedia('all',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">Tous</button>
-                <button class="btn-secondary media-cat-btn" onclick="filterMedia('demo',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎵 Démos</button>
-                <button class="btn-secondary media-cat-btn" onclick="filterMedia('diffusion',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📻 Diffusion</button>
-                <button class="btn-secondary media-cat-btn" onclick="filterMedia('live',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎤 Live</button>
-                <button class="btn-secondary media-cat-btn" onclick="filterMedia('autre',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎧 Autres</button>
+
+            <!-- Section Paroles & Textes -->
+            <div id="media-section-lyrics" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button class="btn-secondary lyrics-cat-btn active" onclick="filterLyrics('all',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">Tous</button>
+                        <button class="btn-secondary lyrics-cat-btn" onclick="filterLyrics('paroles',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎤 Paroles</button>
+                        <button class="btn-secondary lyrics-cat-btn" onclick="filterLyrics('texte',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📝 Textes</button>
+                        <button class="btn-secondary lyrics-cat-btn" onclick="filterLyrics('autre',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📁 Autres</button>
+                    </div>
+                    <button class="btn-primary" onclick="openLyricsEditor()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Nouveau texte</button>
+                </div>
+                <div id="lyrics-list"></div>
             </div>
-            <div id="media-list" style="padding-bottom:5rem;"></div>
+
+            <!-- Lecteur audio fixe -->
             <div id="audio-player-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg-secondary);border-top:1px solid var(--border);padding:0.75rem 1.5rem;z-index:200;align-items:center;gap:1rem;">
                 <div style="flex:1;min-width:0;">
                     <div id="audio-player-title" style="font-weight:600;font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
@@ -1330,7 +1355,7 @@ const HEARTBEAT_MS    = 60 * 1000;        // heartbeat toutes les 60s
 // ═══════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════
-let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[], userSettings:{}, communityDocs:[], mediaFiles:[] };
+let data = { stock:[], purchases:[], design:[], contacts:[], tasks:[], events:[], links:[], setlist:[], transactions:[], members:[], checklistMusicians:[], savedSetlists:[], daEtablie:[], gearLibrary:[], caisse:[], gearCategories:[], userSettings:{}, communityDocs:[], mediaFiles:[], lyrics:[] };
 let currentMonth  = new Date();
 let contactFilter = 'all';
 let modalType = '';
@@ -2009,6 +2034,7 @@ async function saveCurrentForm() {
     await persist();
     closeModal();
     updateUI();
+    if (modalType === 'add-event') renderCalendar();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2091,7 +2117,8 @@ function updateStats() {
             const typeColors = { concert:'var(--accent-primary)', repetition:'var(--success)', enregistrement:'var(--warning)', meeting:'#ec4899', autre:'var(--text-secondary)' };
             const typeLabels = { concert:'🎸 Concert', repetition:'🥁 Répétition', enregistrement:'🎙 Enregistrement', meeting:'📋 Réunion', autre:'📅 Événement' };
             const col = typeColors[ev.type] || 'var(--accent-primary)';
-            const daysLeft = Math.ceil((new Date(ev.date+'T12:00:00') - now) / 86400000);
+            const evDate = new Date(ev.date+'T00:00:00'); evDate.setHours(0,0,0,0);
+            const daysLeft = Math.round((evDate - now) / 86400000);
             const daysLabel = daysLeft === 0 ? "Aujourd'hui !" : daysLeft === 1 ? 'Demain !' : 'Dans ' + daysLeft + ' jours';
             nextEl.innerHTML = `
                 <div style="background:var(--bg-secondary);border:1px solid var(--border);border-left:4px solid ${col};border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;">
@@ -4268,6 +4295,146 @@ function autoFillCommName(input) {
         const raw = input.files[0].name;
         nameEl.value = raw.includes('.') ? raw.split('.').slice(0,-1).join('.') : raw;
     }
+}
+
+
+// ══════════════════════════════════════════════════════════════
+//  MÉDIAS — SOUS-ONGLETS
+// ══════════════════════════════════════════════════════════════
+
+let mediaSection = 'audio'; // 'audio' | 'lyrics'
+
+function switchMediaSection(section) {
+    mediaSection = section;
+    document.getElementById('media-section-audio').style.display  = section === 'audio'  ? '' : 'none';
+    document.getElementById('media-section-lyrics').style.display = section === 'lyrics' ? '' : 'none';
+    const btnA = document.getElementById('media-tab-btn-audio');
+    const btnL = document.getElementById('media-tab-btn-lyrics');
+    if (btnA) { btnA.style.background = section === 'audio' ? 'var(--accent-gradient)' : 'transparent'; btnA.style.color = section === 'audio' ? 'white' : 'var(--text-secondary)'; btnA.style.border = section === 'audio' ? 'none' : '1px solid var(--border)'; }
+    if (btnL) { btnL.style.background = section === 'lyrics' ? 'var(--accent-gradient)' : 'transparent'; btnL.style.color = section === 'lyrics' ? 'white' : 'var(--text-secondary)'; btnL.style.border = section === 'lyrics' ? 'none' : '1px solid var(--border)'; }
+    if (section === 'lyrics') renderLyrics();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PAROLES & TEXTES
+// ══════════════════════════════════════════════════════════════
+
+let lyricsFilter = 'all';
+let lyricsEditingId = null;
+
+function filterLyrics(cat, btn) {
+    lyricsFilter = cat;
+    document.querySelectorAll('.lyrics-cat-btn').forEach(function(b) { b.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+    renderLyrics();
+}
+
+function renderLyrics() {
+    const el = document.getElementById('lyrics-list');
+    if (!el) return;
+    const items = (data.lyrics || []).filter(function(l) { return lyricsFilter === 'all' || l.cat === lyricsFilter; });
+    if (!items.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:3rem 1rem;"><i class="fas fa-file-alt"></i><h3>Aucun texte</h3><p>Créez votre premier texte via le bouton ci-dessus</p></div>';
+        return;
+    }
+    const catLabels = { paroles:'🎤 Paroles', texte:'📝 Texte', autre:'📁 Autre' };
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">';
+    items.forEach(function(lyr) {
+        const preview = (lyr.content || '').slice(0, 120).replace(/\n/g, ' ');
+        html += '<div class="card" style="padding:1rem;cursor:pointer;" onclick="openLyricsViewer(\'' + lyr.id + '\')">';
+        html += '<div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.75rem;">';
+        html += '<div style="width:40px;height:40px;border-radius:10px;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">' + (lyr.cat === 'paroles' ? '🎤' : lyr.cat === 'texte' ? '📝' : '📁') + '</div>';
+        html += '<div style="flex:1;min-width:0;">';
+        html += '<div style="font-weight:700;font-size:0.95rem;margin-bottom:2px;">' + lyr.title + '</div>';
+        html += '<div style="font-size:0.72rem;color:var(--accent-primary);">' + (catLabels[lyr.cat] || lyr.cat) + '</div>';
+        html += '<div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;">' + new Date(lyr.updatedAt || lyr.createdAt).toLocaleDateString('fr-FR') + '</div>';
+        html += '</div></div>';
+        if (preview) html += '<div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:0.75rem;">' + preview + '</div>';
+        html += '<div style="display:flex;gap:0.4rem;padding-top:0.75rem;border-top:1px solid var(--border);">';
+        html += '<button onclick="event.stopPropagation();openLyricsEditor(\'' + lyr.id + '\')" class="btn-secondary" style="flex:1;font-size:0.78rem;padding:0.4rem;"><i class="fas fa-pen"></i> Modifier</button>';
+        html += '<button onclick="event.stopPropagation();deleteLyrics(\'' + lyr.id + '\')" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>';
+        html += '</div></div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+}
+
+function openLyricsEditor(id) {
+    lyricsEditingId = id || null;
+    const lyr = id ? (data.lyrics || []).find(function(l) { return String(l.id) === String(id); }) : null;
+    document.getElementById('modal-title').textContent = lyr ? 'Modifier : ' + lyr.title : 'Nouveau texte';
+    const catSel = ['paroles','texte','autre'].map(function(v) {
+        const labels = { paroles:'🎤 Paroles', texte:'📝 Texte', autre:'📁 Autre' };
+        return '<option value="' + v + '"' + (lyr && lyr.cat === v ? ' selected' : '') + '>' + labels[v] + '</option>';
+    }).join('');
+    document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Titre</label><input id="lyr-title" type="text" placeholder="Ex: Chanson 1" value="' + (lyr ? lyr.title.replace(/"/g,'&quot;') : '') + '"></div>'
+        + '<div class="form-group"><label>Catégorie</label><select id="lyr-cat">' + catSel + '</select></div>'
+        + '<div class="form-group"><label>Contenu</label><textarea id="lyr-content" rows="12" placeholder="Écrivez vos paroles ici…" style="width:100%;padding:0.75rem;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;resize:vertical;line-height:1.6;">' + (lyr ? lyr.content.replace(/</g,'&lt;') : '') + '</textarea></div>';
+    document.querySelector('.modal-footer').style.display = '';
+    document.querySelector('.modal-footer .btn-primary').onclick = saveLyrics;
+    document.querySelector('.modal-footer .btn-primary').innerHTML = '<i class="fas fa-save"></i> Sauvegarder';
+    document.getElementById('modal').classList.add('active');
+}
+
+function openLyricsViewer(id) {
+    const lyr = (data.lyrics || []).find(function(l) { return String(l.id) === String(id); });
+    if (!lyr) return;
+    const lines = lyr.content.split('\n').map(function(l) { return l === '' ? '<br>' : '<p style="margin:0;line-height:1.8;">' + l.replace(/</g,'&lt;') + '</p>'; }).join('');
+    document.getElementById('modal-title').textContent = lyr.title;
+    document.getElementById('modal-body').innerHTML = '<div style="font-size:0.75rem;color:var(--accent-primary);margin-bottom:1rem;">' + (lyr.cat === 'paroles' ? '🎤 Paroles' : lyr.cat === 'texte' ? '📝 Texte' : '📁 Autre') + '</div>'
+        + '<div style="font-size:0.92rem;line-height:1.8;white-space:pre-wrap;max-height:60vh;overflow-y:auto;padding-right:0.5rem;">' + lines + '</div>';
+    const footer = document.querySelector('.modal-footer');
+    footer.style.display = '';
+    footer.innerHTML = '<button class="btn-secondary" onclick="closeModal()">Fermer</button>'
+        + '<button class="btn-primary" onclick="closeModal();setTimeout(function(){openLyricsEditor(\'' + lyr.id + '\')},150)"><i class="fas fa-pen"></i> Modifier</button>';
+    document.getElementById('modal').classList.add('active');
+}
+
+async function saveLyrics() {
+    const title   = (document.getElementById('lyr-title').value || '').trim();
+    const cat     = document.getElementById('lyr-cat').value;
+    const content = document.getElementById('lyr-content').value || '';
+    if (!title) { showToast('Donnez un titre', true); return; }
+    if (!data.lyrics) data.lyrics = [];
+
+    // Upload to Drive as .txt file
+    const fileName = title + '.txt';
+    const base64   = btoa(unescape(encodeURIComponent(content)));
+    let driveId = lyricsEditingId ? ((data.lyrics.find(function(l){ return String(l.id) === String(lyricsEditingId); }) || {}).driveId || null) : null;
+
+    // Delete old Drive file if exists and replacing
+    if (driveId) {
+        try { await apsFetch('delete_file', { fileId: driveId }); } catch(e) {}
+    }
+
+    try {
+        const res = await apsFetch('upload_file', { fileName: fileName, mimeType: 'text/plain', base64: base64, folder: 'lyrics' });
+        if (res.ok) driveId = res.id;
+    } catch(e) {}
+
+    if (lyricsEditingId) {
+        const idx = data.lyrics.findIndex(function(l) { return String(l.id) === String(lyricsEditingId); });
+        if (idx !== -1) {
+            data.lyrics[idx] = { ...data.lyrics[idx], title, cat, content, driveId, updatedAt: new Date().toISOString() };
+        }
+    } else {
+        data.lyrics.push({ id: Date.now(), title, cat, content, driveId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+    await persist();
+    closeModal();
+    renderLyrics();
+    showToast(lyricsEditingId ? 'Texte mis à jour ✓' : 'Texte créé ✓');
+    lyricsEditingId = null;
+}
+
+async function deleteLyrics(id) {
+    if (!confirm('Supprimer ce texte ?')) return;
+    const lyr = (data.lyrics || []).find(function(l) { return String(l.id) === String(id); });
+    if (lyr && lyr.driveId) {
+        try { await apsFetch('delete_file', { fileId: lyr.driveId }); } catch(e) {}
+    }
+    data.lyrics = (data.lyrics || []).filter(function(l) { return String(l.id) !== String(id); });
+    await persist(); renderLyrics(); showToast('Texte supprimé');
 }
 
 // ── BOOT ──
