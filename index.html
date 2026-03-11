@@ -374,7 +374,7 @@
             border-left: 4px solid var(--success);
             padding: 1rem 1.5rem; border-radius: 8px; box-shadow: var(--shadow);
             display: flex; align-items: center; gap: 0.75rem;
-            transform: translateX(calc(100% + 3rem)); transition: transform 0.3s ease; z-index: 2000; max-width: min(90vw, 360px); word-break: break-word;
+            transform: translateX(400px); transition: transform 0.3s ease; z-index: 2000;
         }
         .toast.show { transform: translateX(0); }
         .toast.error { border-left-color: var(--danger); }
@@ -773,7 +773,7 @@
             <li><button class="nav-link" onclick="switchTab('checklist', this)"><i class="fas fa-clipboard-check"></i><span>Checklist Concert</span></button></li>
             <li><button class="nav-link" onclick="switchTab('setlist', this)"><i class="fas fa-music"></i><span>Setlist & Répertoire</span></button></li>
             <li><button class="nav-link" onclick="switchTab('finance', this)"><i class="fas fa-wallet"></i><span>Finance & Budget</span></button></li>
-            <li><button class="nav-link" onclick="switchTab('community', this)"><i class="fas fa-folder-open"></i><span>Community</span></button></li>
+            <li><button class="nav-link" onclick="switchTab('community', this)"><i class="fas fa-folder-open"></i><span>Ressources</span></button></li>
             <li><button class="nav-link" onclick="switchTab('media', this)"><i class="fas fa-headphones"></i><span>Médias & Textes</span></button></li>
             <li id="nav-admin-item" style="display:none;"><button class="nav-link" onclick="switchTab('admin', this)"><i class="fas fa-shield-halved"></i><span>Administration</span></button></li>
         </ul>
@@ -1197,7 +1197,7 @@
         <!-- ══ COMMUNITY MANAGEMENT ══ -->
         <div id="community" class="tab-content">
             <div class="header">
-                <h2>Community Management</h2>
+                <h2>Ressources</h2>
                 <div class="header-actions">
                     <button class="btn-primary" onclick="openCommunityUpload()"><i class="fas fa-upload"></i> Ajouter un fichier</button>
                     <button class="btn-secondary" onclick="openSendEmail()" style="font-size:0.85rem;"><i class="fas fa-envelope"></i> Envoyer un mail</button>
@@ -1206,12 +1206,28 @@
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.25rem;">
                 <button class="btn-secondary community-cat-btn active" onclick="filterCommunity('all',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">Tous</button>
                 <button class="btn-secondary community-cat-btn" onclick="filterCommunity('rider',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎚 Riders</button>
-                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('fiche',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📋 Fiches techniques</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('fiche',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📋 Fiches tech</button>
                 <button class="btn-secondary community-cat-btn" onclick="filterCommunity('contrat',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📄 Contrats</button>
                 <button class="btn-secondary community-cat-btn" onclick="filterCommunity('presse',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📰 Presse</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('logo',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎨 Logo</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('typo',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🔤 Typo</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('creation',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">✏️ Créations</button>
+                <button class="btn-secondary community-cat-btn" onclick="filterCommunity('partition',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">🎼 Partitions</button>
                 <button class="btn-secondary community-cat-btn" onclick="filterCommunity('autre',this)" style="font-size:0.78rem;padding:0.4rem 0.85rem;">📁 Autres</button>
             </div>
             <div id="community-list"></div>
+
+            <!-- Visualiseur de fichier (panneau plein écran) -->
+            <div id="file-viewer-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:3000;flex-direction:column;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1.25rem;background:var(--bg-secondary);border-bottom:1px solid var(--border);flex-shrink:0;">
+                    <div style="font-weight:700;font-size:1rem;" id="file-viewer-title">—</div>
+                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <a id="file-viewer-download" href="#" target="_blank" class="btn-secondary" style="font-size:0.82rem;padding:0.4rem 0.85rem;text-decoration:none;"><i class="fas fa-download"></i> Télécharger</a>
+                        <button onclick="closeFileViewer()" class="btn-icon" style="font-size:1.1rem;color:var(--text-secondary);"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div id="file-viewer-body" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:1rem;"></div>
+            </div>
         </div>
 
         <!-- ══ MEDIAS & TEXTES ══ -->
@@ -1306,7 +1322,7 @@
                 <i class="fas fa-wallet"></i>Finance
             </button>
             <button class="bottom-nav-btn" onclick="switchTabMobile('community',this)">
-                <i class="fas fa-folder-open"></i>Community
+                <i class="fas fa-folder-open"></i>Ressources
             </button>
             <button class="bottom-nav-btn" onclick="switchTabMobile('media',this)">
                 <i class="fas fa-headphones"></i>Médias
@@ -3811,6 +3827,15 @@ function showToast(msg, err=false) {
     setTimeout(()=>t.classList.remove('show'),3000);
 }
 
+
+// Close file viewer on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const ov = document.getElementById('file-viewer-overlay');
+        if (ov && ov.style.display !== 'none') { closeFileViewer(); }
+    }
+});
+
 document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
 
 
@@ -4018,8 +4043,8 @@ function renderCommunity() {
         el.innerHTML = '<div class="empty-state" style="padding:3rem 1rem;"><i class="fas fa-folder-open"></i><h3>Aucun fichier</h3><p>Ajoutez des fichiers via le bouton ci-dessus</p></div>';
         return;
     }
-    const catLabels = { rider:'🎚 Rider', fiche:'📋 Fiche technique', contrat:'📄 Contrat', presse:'📰 Presse', autre:'📁 Autre' };
-    const catIcons  = { rider:'🎚', fiche:'📋', contrat:'📄', presse:'📰', autre:'📁' };
+    const catLabels = { rider:'🎚 Rider', fiche:'📋 Fiche tech', contrat:'📄 Contrat', presse:'📰 Presse', logo:'🎨 Logo', typo:'🔤 Typographie', creation:'✏️ Création', partition:'🎼 Partition', autre:'📁 Autre' };
+    const catIcons  = { rider:'🎚', fiche:'📋', contrat:'📄', presse:'📰', logo:'🎨', typo:'🔤', creation:'✏️', partition:'🎼', autre:'📁' };
     let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;">';
     docs.forEach(function(doc) {
         const contactNames = (doc.contactIds || []).map(function(id) {
@@ -4039,7 +4064,8 @@ function renderCommunity() {
         html += '<div style="font-size:0.68rem;color:var(--text-secondary);margin-top:4px;">' + new Date(doc.createdAt).toLocaleDateString('fr-FR') + '</div>';
         html += '</div></div>';
         html += '<div style="display:flex;gap:0.4rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);">';
-        html += '<a href="' + doc.url + '" target="_blank" class="btn-secondary" style="flex:1;text-align:center;font-size:0.78rem;padding:0.4rem;text-decoration:none;"><i class="fas fa-download"></i> Télécharger</a>';
+        html += '<button data-url="' + doc.url + '" data-name="' + doc.name.replace(/"/g,'&quot;') + '" data-drid="' + doc.driveId + '" onclick="openFileViewer(this.dataset.drid,this.dataset.name,this.dataset.url)" class="btn-secondary" style="flex:1;text-align:center;font-size:0.78rem;padding:0.4rem;"><i class="fas fa-eye"></i> Voir</button>';
+        html += '<a href="' + doc.url + '" target="_blank" class="btn-icon" style="color:var(--text-secondary);" title="Télécharger"><i class="fas fa-download"></i></a>';
         html += '<button data-fid="' + doc.driveId + '" onclick="openSendEmail(this.dataset.fid)" class="btn-secondary" style="font-size:0.78rem;padding:0.4rem 0.6rem;" title="Envoyer par mail"><i class="fas fa-envelope"></i></button>';
         html += '<button data-did="' + doc.id + '" onclick="editCommunityDoc(this.dataset.did)" class="btn-icon" style="color:var(--accent-primary);" title="Modifier"><i class="fas fa-pen"></i></button>';
         html += '<button data-did="' + doc.id + '" data-drid="' + doc.driveId + '" onclick="deleteCommunityDoc(this.dataset.did,this.dataset.drid)" class="btn-icon" style="color:var(--danger);" title="Supprimer"><i class="fas fa-trash"></i></button>';
@@ -4057,7 +4083,7 @@ function openCommunityUpload() {
     document.getElementById('modal-title').textContent = 'Ajouter un fichier';
     document.getElementById('modal-body').innerHTML = '<div class="form-group"><label>Fichier</label><input id="comm-file-input" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg,.zip" onchange="autoFillCommName(this)"></div>'
         + '<div class="form-group"><label>Nom affiché</label><input id="comm-display-name" type="text" placeholder="Ex: Rider technique 2025"></div>'
-        + '<div class="form-group"><label>Catégorie</label><select id="comm-cat"><option value="rider">🎚 Rider</option><option value="fiche">📋 Fiche technique</option><option value="contrat">📄 Contrat</option><option value="presse">📰 Presse</option><option value="autre">📁 Autre</option></select></div>'
+        + '<div class="form-group"><label>Catégorie</label><select id="comm-cat"><option value="rider">🎚 Rider</option><option value="fiche">📋 Fiche technique</option><option value="contrat">📄 Contrat</option><option value="presse">📰 Presse</option><option value="logo">🎨 Logo</option><option value="typo">🔤 Typographie</option><option value="creation">✏️ Création (AI/Vectoriel)</option><option value="partition">🎼 Partition / Tablature</option><option value="autre">📁 Autre</option></select></div>'
         + '<div class="form-group"><label>Note (optionnel)</label><input id="comm-note" type="text" placeholder="Ex: Rider 2024, version finale…"></div>'
         + '<div class="form-group"><label>Lier à des contacts</label><div style="max-height:150px;overflow-y:auto;background:var(--bg-tertiary);border-radius:8px;padding:0.5rem 0.75rem;">' + (contactOptions || '<span style="color:var(--text-secondary);font-size:0.85rem;">Aucun contact enregistré</span>') + '</div></div>'
         + '<div id="comm-upload-progress" style="display:none;margin-top:0.5rem;font-size:0.85rem;color:var(--accent-primary);"><i class="fas fa-spinner fa-spin"></i> Upload en cours…</div>';
@@ -4104,8 +4130,8 @@ function editCommunityDoc(id) {
         const checked = (doc.contactIds || []).includes(ct.id) ? ' checked' : '';
         contactOptions += '<label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer;"><input type="checkbox" value="' + ct.id + '" class="comm-contact-cb"' + checked + '> ' + ct.name + '</label>';
     });
-    const cats = ['rider','fiche','contrat','presse','autre'];
-    const catNames = { rider:'🎚 Rider', fiche:'📋 Fiche technique', contrat:'📄 Contrat', presse:'📰 Presse', autre:'📁 Autre' };
+    const cats = ['rider','fiche','contrat','presse','logo','typo','creation','partition','autre'];
+    const catNames = { rider:'🎚 Rider', fiche:'📋 Fiche technique', contrat:'📄 Contrat', presse:'📰 Presse', logo:'🎨 Logo', typo:'🔤 Typographie', creation:'✏️ Création (AI/Vectoriel)', partition:'🎼 Partition / Tablature', autre:'📁 Autre' };
     let catSel = '';
     cats.forEach(function(v) { catSel += '<option value="' + v + '"' + (doc.cat === v ? ' selected' : '') + '>' + catNames[v] + '</option>'; });
     document.getElementById('modal-title').textContent = 'Modifier le fichier';
