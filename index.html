@@ -4064,7 +4064,7 @@ function renderCommunity() {
         html += '<div style="font-size:0.68rem;color:var(--text-secondary);margin-top:4px;">' + new Date(doc.createdAt).toLocaleDateString('fr-FR') + '</div>';
         html += '</div></div>';
         html += '<div style="display:flex;gap:0.4rem;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);">';
-        html += '<button onclick="openFileViewer(\'' + doc.driveId + '\',\'' + doc.name.replace(/'/g,"\\''") + '\',\'' + doc.url + '\')" class="btn-secondary" style="flex:1;text-align:center;font-size:0.78rem;padding:0.4rem;"><i class="fas fa-eye" style="pointer-events:none;"></i> Voir</button>';
+        html += '<button onclick="openFileViewer(\'' + encodeURIComponent(doc.driveId) + '\',\'' + encodeURIComponent(doc.name) + '\',\'' + encodeURIComponent(doc.url) + '\')" class="btn-secondary" style="flex:1;text-align:center;font-size:0.78rem;padding:0.4rem;"><i class="fas fa-eye" style="pointer-events:none;"></i> Voir</button>';
         html += '<a href="' + doc.url + '" target="_blank" class="btn-icon" style="color:var(--text-secondary);" title="Télécharger"><i class="fas fa-download"></i></a>';
         html += '<button data-fid="' + doc.driveId + '" onclick="openSendEmail(this.dataset.fid)" class="btn-secondary" style="font-size:0.78rem;padding:0.4rem 0.6rem;" title="Envoyer par mail"><i class="fas fa-envelope"></i></button>';
         html += '<button data-did="' + doc.id + '" onclick="editCommunityDoc(this.dataset.did)" class="btn-icon" style="color:var(--accent-primary);" title="Modifier"><i class="fas fa-pen"></i></button>';
@@ -4462,6 +4462,80 @@ async function deleteLyrics(id) {
     data.lyrics = (data.lyrics || []).filter(function(l) { return String(l.id) !== String(id); });
     await persist(); renderLyrics(); showToast('Texte supprimé');
 }
+
+
+// ══════════════════════════════════════════════════════════════
+//  VISUALISEUR DE FICHIER (Ressources)
+// ══════════════════════════════════════════════════════════════
+
+async function openFileViewer(driveIdEnc, nameEnc, urlEnc) {
+    const driveId = decodeURIComponent(driveIdEnc);
+    const name    = decodeURIComponent(nameEnc);
+    const fileUrl = decodeURIComponent(urlEnc);
+
+    const overlay = document.getElementById('file-viewer-overlay');
+    const titleEl = document.getElementById('file-viewer-title');
+    const body    = document.getElementById('file-viewer-body');
+    const dlBtn   = document.getElementById('file-viewer-download');
+
+    titleEl.textContent = name;
+    dlBtn.href = fileUrl;
+    body.style.padding = '1rem';
+    body.innerHTML = '<div style="color:var(--text-secondary);padding:3rem;font-size:0.9rem;"><i class="fas fa-spinner fa-spin" style="margin-right:0.5rem;"></i>Chargement…</div>';
+    overlay.style.display = 'flex';
+
+    const ext = name.split('.').pop().toLowerCase();
+    const imgExts  = ['png','jpg','jpeg','gif','webp','svg','bmp'];
+    const textExts = ['txt','gp','gp3','gp4','gp5','gpx','gp7','tef','ptb','abc','tex','md','json','csv'];
+
+    if (imgExts.includes(ext)) {
+        try {
+            const res = await fetch(SCRIPT_URL + '/audio?id=' + driveId, { credentials: 'omit' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const blob = await res.blob();
+            const url  = URL.createObjectURL(blob);
+            body.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:calc(100vh - 80px);object-fit:contain;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.5);">';
+        } catch(e) {
+            body.innerHTML = '<p style="color:var(--danger);padding:2rem;">Impossible de charger l\'image : ' + e.message + '</p>';
+        }
+    } else if (textExts.includes(ext)) {
+        try {
+            const res = await fetch(SCRIPT_URL + '/audio?id=' + driveId, { credentials: 'omit' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const text = await res.text();
+            const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            body.innerHTML = '<pre style="background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;padding:1.5rem;font-size:0.82rem;line-height:1.7;color:var(--text-primary);white-space:pre-wrap;word-break:break-word;max-width:860px;width:100%;margin:0 auto;">' + escaped + '</pre>';
+        } catch(e) {
+            body.innerHTML = '<p style="color:var(--text-secondary);padding:2rem;">Ce format (' + ext.toUpperCase() + ') ne peut pas être prévisualisé.<br><a href="' + fileUrl + '" target="_blank" style="color:var(--accent-primary);">Télécharger</a></p>';
+        }
+    } else if (ext === 'pdf') {
+        const viewerUrl = 'https://docs.google.com/viewer?url=' + encodeURIComponent(fileUrl) + '&embedded=true';
+        body.style.padding = '0';
+        body.innerHTML = '<iframe src="' + viewerUrl + '" style="width:100%;height:calc(100vh - 56px);border:none;" allowfullscreen></iframe>';
+    } else {
+        body.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text-secondary);">'
+            + '<i class="fas fa-file" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.3;"></i>'
+            + '<div style="font-size:1rem;font-weight:600;margin-bottom:0.5rem;">' + name + '</div>'
+            + '<div style="font-size:0.85rem;margin-bottom:1.5rem;">Le format .' + ext + ' ne peut pas être prévisualisé.</div>'
+            + '<a href="' + fileUrl + '" target="_blank" class="btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;"><i class="fas fa-download"></i> Télécharger</a>'
+            + '</div>';
+    }
+}
+
+function closeFileViewer() {
+    const overlay = document.getElementById('file-viewer-overlay');
+    const body    = document.getElementById('file-viewer-body');
+    overlay.style.display = 'none';
+    body.innerHTML = '';
+    body.style.padding = '1rem';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const ov = document.getElementById('file-viewer-overlay');
+        if (ov && ov.style.display !== 'none') closeFileViewer();
+    }
+});
 
 // ── BOOT ──
 document.addEventListener('DOMContentLoaded', initApp);
